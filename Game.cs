@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GameAi
+namespace GameAiLib
 {
     public enum Player
     { 
@@ -9,7 +9,7 @@ namespace GameAi
         Player2
     }
 
-    public interface IGameState
+    public interface IGameBoard
     {
         bool IsTerminal { get; }
         double Score { get; } // give score for Player 1 
@@ -19,14 +19,14 @@ namespace GameAi
         Player? Winner { get; }
     }
 
-    public static class Optimizer
+    public static class Game
     {
         public static Player OtherPlayer(this Player player)
         {
             return player == Player.Player1 ? Player.Player2 : Player.Player1;
         }
 
-        public static void Play(IGameState state, bool playerStarts = false, int maxDepth = int.MaxValue)
+        public static void Play(IGameBoard board, bool playerStarts = false, int maxDepth = int.MaxValue)
         {
             Random rand = new Random();
             bool skipFirstMove = playerStarts;
@@ -36,26 +36,26 @@ namespace GameAi
                 {
                     double bestScore = double.MinValue;
                     List<int> bestMoves = new List<int>();
-                    foreach (int move in state.AvailableMoves)
+                    foreach (int move in board.AvailableMoves)
                     {
-                        state.MakeMove(move, Player.Player1);
+                        board.MakeMove(move, Player.Player1);
 #if MINIMAX
-                        double score = state.Minimax(maxDepth);
+                        double score = board.Minimax(maxDepth);
 #else
-                        double score = state.AlphaBeta(maxDepth, double.MinValue, double.MaxValue);
+                        double score = board.AlphaBeta(maxDepth, double.MinValue, double.MaxValue);
 #endif
                         if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                         if (score == bestScore) { bestMoves.Add(move); }
-                        state.UndoMove(move, Player.Player1);
+                        board.UndoMove(move, Player.Player1);
                     }
-                    state.MakeMove(bestMoves[rand.Next(bestMoves.Count)], Player.Player1);
-                    Console.WriteLine(state);
-                    if (state.Winner == Player.Player1)
+                    board.MakeMove(bestMoves[rand.Next(bestMoves.Count)], Player.Player1);
+                    Console.WriteLine(board);
+                    if (board.Winner == Player.Player1)
                     {
                         Console.WriteLine("I won.");
                         break;
                     }
-                    else if (state.IsTerminal)
+                    else if (board.IsTerminal)
                     {
                         Console.WriteLine("It's a tie.");
                         break;
@@ -64,27 +64,27 @@ namespace GameAi
                 else
                 {
                     skipFirstMove = false;
-                    Console.WriteLine(state);
+                    Console.WriteLine(board);
                 }
                 Console.Write("Your move? ");
                 int playerMove = Convert.ToInt32(Console.ReadLine());
-                state.MakeMove(playerMove, Player.Player2);
-                if (state.Winner == Player.Player2) 
+                board.MakeMove(playerMove, Player.Player2);
+                if (board.Winner == Player.Player2) 
                 {
-                    Console.WriteLine(state); 
+                    Console.WriteLine(board); 
                     Console.WriteLine("You won."); 
                     break; 
                 }
-                else if (state.IsTerminal) 
+                else if (board.IsTerminal) 
                 {
-                    Console.WriteLine(state); 
+                    Console.WriteLine(board); 
                     Console.WriteLine("It's a tie."); 
                     break; 
                 }
             } 
         }
 
-        public static double Minimax(this IGameState node, int depth, Player player = Player.Player2)
+        public static double Minimax(this IGameBoard node, int depth, Player player = Player.Player2)
         {
             if (depth == 0 || node.IsTerminal) { return node.Score; }
             double bestVal = player == Player.Player1 ? double.MinValue : double.MaxValue;
@@ -105,7 +105,7 @@ namespace GameAi
             return bestVal;
         }
 
-        public static double AlphaBeta(this IGameState node, int depth, double alpha, double beta, Player player = Player.Player2)
+        public static double AlphaBeta(this IGameBoard node, int depth, double alpha, double beta, Player player = Player.Player2)
         {
             if (depth == 0 || node.IsTerminal) { return node.Score; }
             if (player == Player.Player1)
