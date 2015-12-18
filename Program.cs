@@ -12,6 +12,8 @@ namespace TicTacToe
         {
             private byte[][] mBoard
                 = new byte[3][];
+            private Player? mWinner
+                = null;
 
             public GameState()
             {
@@ -23,29 +25,7 @@ namespace TicTacToe
 
             public Player? GetWinner()
             {
-                for (int row = 0; row < 3; row++)
-                {
-                    if (mBoard[row][0] != 0 && mBoard[row][0] == mBoard[row][1] && mBoard[row][1] == mBoard[row][2]) 
-                    { 
-                        return Optimizer.PlayerFromVal(mBoard[row][0]); 
-                    }
-                }
-                for (int col = 0; col < 3; col++)
-                {
-                    if (mBoard[0][col] != 0 && mBoard[0][col] == mBoard[1][col] && mBoard[1][col] == mBoard[2][col])
-                    {
-                        return Optimizer.PlayerFromVal(mBoard[0][col]);
-                    }
-                }
-                if (mBoard[0][0] != 0 && mBoard[0][0] == mBoard[1][1] && mBoard[1][1] == mBoard[2][2]) 
-                {
-                    return Optimizer.PlayerFromVal(mBoard[0][0]);
-                }
-                if (mBoard[0][2] != 0 && mBoard[0][2] == mBoard[1][1] && mBoard[1][1] == mBoard[2][0]) 
-                {
-                    return Optimizer.PlayerFromVal(mBoard[0][2]);
-                }
-                return null;
+                return mWinner;
             }
 
             private bool IsFull
@@ -90,13 +70,22 @@ namespace TicTacToe
                 int row = move / 3;
                 int col = move % 3;
                 mBoard[row][col] = player.PlayerVal();
+                // check if this resulted in a win
+                if ((mBoard[row][0] == mBoard[row][1] && mBoard[row][1] == mBoard[row][2]) || 
+                    (mBoard[0][col] == mBoard[1][col] && mBoard[1][col] == mBoard[2][col]) ||
+                    (row == col && mBoard[0][0] == mBoard[1][1] && mBoard[1][1] == mBoard[2][2]) ||
+                    (row + col == 2 && mBoard[0][2] == mBoard[1][1] && mBoard[1][1] == mBoard[2][0]))
+                {
+                    mWinner = player;
+                }
             }
 
             public void UndoMove(int move, Player player)
             {
                 int row = move / 3;
                 int col = move % 3;
-                mBoard[row][col] = 0;                
+                mBoard[row][col] = 0;
+                mWinner = null;
             }
 
             public override string ToString()
