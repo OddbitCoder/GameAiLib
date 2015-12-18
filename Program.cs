@@ -68,7 +68,7 @@ namespace TicTacToe
             {
                 int row = move / 3;
                 int col = move % 3;
-                mBoard[row][col] = player.PlayerVal();
+                mBoard[row][col] = (byte)(player == Player.Player1 ? 1 : 2);
                 mDepth++;
                 // check if this resulted in a win
                 if ((mBoard[row][0] == mBoard[row][1] && mBoard[row][1] == mBoard[row][2]) || 

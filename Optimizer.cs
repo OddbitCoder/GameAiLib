@@ -26,17 +26,7 @@ namespace GameAi
             return player == Player.Player1 ? Player.Player2 : Player.Player1;
         }
 
-        public static byte PlayerVal(this Player player)
-        {
-            return (byte)(player == Player.Player1 ? 1 : 2);
-        }
-
-        public static Player PlayerFromVal(byte val)
-        {
-            return val == 1 ? Player.Player1 : Player.Player2;
-        }
-
-        public static void Play(IGameState state, bool playerStarts = true, int maxDepth = int.MaxValue)
+        public static void Play(IGameState state, bool playerStarts = false, int maxDepth = int.MaxValue)
         {
             Random rand = new Random();
             bool skipFirstMove = playerStarts;
@@ -49,7 +39,11 @@ namespace GameAi
                     foreach (int move in state.AvailableMoves)
                     {
                         state.MakeMove(move, Player.Player1);
+#if MINIMAX
                         double score = state.Minimax(maxDepth);
+#else
+                        double score = state.AlphaBeta(maxDepth, double.MinValue, double.MaxValue);
+#endif
                         if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                         if (score == bestScore) { bestMoves.Add(move); }
                         state.UndoMove(move, Player.Player1);
@@ -96,7 +90,7 @@ namespace GameAi
             double bestVal = player == Player.Player1 ? double.MinValue : double.MaxValue;
             foreach (int move in node.AvailableMoves)
             {
-                node.MakeMove(move, player);
+                node.MakeMove(move, player); 
                 double val = Minimax(node, depth - 1, player.OtherPlayer());
                 node.UndoMove(move, player);
                 if (player == Player.Player1)
@@ -109,6 +103,37 @@ namespace GameAi
                 }
             }
             return bestVal;
-        }    
+        }
+
+        public static double AlphaBeta(this IGameState node, int depth, double alpha, double beta, Player player = Player.Player2)
+        {
+            if (depth == 0 || node.IsTerminal) { return node.Score; }
+            if (player == Player.Player1)
+            {
+                double v = double.MinValue;
+                foreach (int move in node.AvailableMoves)
+                {
+                    node.MakeMove(move, player); 
+                    v = Math.Max(v, AlphaBeta(node, depth - 1, alpha, beta, Player.Player2));
+                    node.UndoMove(move, player);
+                    alpha = Math.Max(alpha, v);
+                    if (beta <= alpha) { break; }
+                }
+                return v;
+            }
+            else
+            {
+                double v = double.MaxValue;
+                foreach (int move in node.AvailableMoves)
+                {
+                    node.MakeMove(move, player); 
+                    v = Math.Min(v, AlphaBeta(node, depth - 1, alpha, beta, Player.Player1));
+                    node.UndoMove(move, player);
+                    beta = Math.Min(beta, v);
+                    if (beta <= alpha) { break; }
+                }
+                return v;
+            }
+        }
     }
 }
