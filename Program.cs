@@ -8,7 +8,7 @@ namespace TicTacToe
 {
     class Program
     {
-        class GameState : IGameState
+        class TicTacToeState : IGameState
         {
             private byte[][] mBoard
                 = new byte[3][];
@@ -17,7 +17,7 @@ namespace TicTacToe
             private int mDepth
                 = 0;
 
-            public GameState()
+            public TicTacToeState()
             {
                 for (int row = 0; row < 3; row++)
                 {
@@ -42,7 +42,7 @@ namespace TicTacToe
 
             public double Score
             {
-                get { return (mWinner == null ? 0 : (mWinner == Player.Player1 ? 1 : -1)); }
+                get { return (mWinner == null ? 0 : (mWinner == Player.Player1 ? (10 - mDepth) : (-10 + mDepth))); }
             }
 
             public int[] AvailableMoves
@@ -104,7 +104,7 @@ namespace TicTacToe
 
         static void Main(string[] args)
         {
-            Optimizer.Play(new GameState());
+            Optimizer.Play(new TicTacToeState());
         }
     }
 }
