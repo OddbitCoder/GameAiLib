@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicTacToe", "TicTacToe.csproj", "{825630B7-2158-450A-B191-81C7EF554126}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameAiLib", "GameAiLib.csproj", "{825630B7-2158-450A-B191-81C7EF554126}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
