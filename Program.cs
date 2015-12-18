@@ -104,7 +104,7 @@ namespace TicTacToe
 
         static void Main(string[] args)
         {
-            Optimizer.Play(new GameState(), maxDepth: int.MaxValue);
+            Optimizer.Play(new GameState());
         }
     }
 }

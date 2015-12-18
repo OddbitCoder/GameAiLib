@@ -35,7 +35,7 @@ namespace GameAi
             return val == 1 ? Player.Player1 : Player.Player2;
         }
 
-        public static void Play(IGameState state, int maxDepth = 5)
+        public static void Play(IGameState state, int maxDepth = int.MaxValue)
         {
             do
             {
