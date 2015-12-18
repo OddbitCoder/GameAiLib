@@ -14,6 +14,8 @@ namespace TicTacToe
                 = new byte[3][];
             private Player? mWinner
                 = null;
+            private int mDepth
+                = 0;
 
             public GameState()
             {
@@ -23,45 +25,42 @@ namespace TicTacToe
                 }
             }
 
-            public Player? GetWinner()
+            public Player? Winner
             {
-                return mWinner;
+                get { return mWinner; }
             }
 
             private bool IsFull
             {
-                get { return !mBoard.Any(row => row.Any(x => x == 0)); }
+                get { return mDepth == 9; }
             }
 
             public bool IsTerminal
             {
-                get { return GetWinner() != null || IsFull; }
+                get { return mWinner != null || IsFull; }
             }
 
             public double Score
             {
-                get 
-                {
-                    Player? winner = GetWinner();
-                    return (winner == null ? 0 : (winner == Player.Player1 ? 1 : -1));
-                }
+                get { return (mWinner == null ? 0 : (mWinner == Player.Player1 ? 1 : -1)); }
             }
 
             public int[] AvailableMoves
             {
                 get
                 {
-                    List<int> moves = new List<int>(9);
+                    int[] moves = new int[9 - mDepth];
                     int offset = 0;
+                    int i = 0;
                     foreach (byte[] row in mBoard)
                     {
                         for (int col = 0; col < 3; col++)
                         {
-                            if (row[col] == 0) { moves.Add(offset + col); }
+                            if (row[col] == 0) { moves[i++] = offset + col; }
                         }
                         offset += 3;
                     }
-                    return moves.ToArray();
+                    return moves;
                 }
             }
 
@@ -70,6 +69,7 @@ namespace TicTacToe
                 int row = move / 3;
                 int col = move % 3;
                 mBoard[row][col] = player.PlayerVal();
+                mDepth++;
                 // check if this resulted in a win
                 if ((mBoard[row][0] == mBoard[row][1] && mBoard[row][1] == mBoard[row][2]) || 
                     (mBoard[0][col] == mBoard[1][col] && mBoard[1][col] == mBoard[2][col]) ||
@@ -86,6 +86,7 @@ namespace TicTacToe
                 int col = move % 3;
                 mBoard[row][col] = 0;
                 mWinner = null;
+                mDepth--;
             }
 
             public override string ToString()

@@ -15,7 +15,7 @@ namespace GameAi
         int[] AvailableMoves { get; }
         void MakeMove(int move, Player player);
         void UndoMove(int move, Player player);
-        Player? GetWinner();
+        Player? Winner { get; }
     }
 
     public static class Optimizer
@@ -50,12 +50,12 @@ namespace GameAi
                 }
                 state.MakeMove(bestMove, Player.Player1);
                 Console.WriteLine(state);
-                if (state.GetWinner() == Player.Player1) { Console.WriteLine("I won."); break; }
+                if (state.Winner == Player.Player1) { Console.WriteLine("I won."); break; }
                 else if (state.IsTerminal) { Console.WriteLine("It's a tie."); break; }
                 Console.Write("Your move? ");
                 int playerMove = Convert.ToInt32(Console.ReadLine());
                 state.MakeMove(playerMove, Player.Player2);
-                if (state.GetWinner() == Player.Player2) { Console.WriteLine("You won."); break; }
+                if (state.Winner == Player.Player2) { Console.WriteLine("You won."); break; }
                 else if (state.IsTerminal) { Console.WriteLine("It's a tie."); break; }
             }
             while (true);
