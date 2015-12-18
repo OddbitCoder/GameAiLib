@@ -39,7 +39,7 @@ namespace GameAi
         public static void Play(IGameState state, int maxDepth = int.MaxValue)
         {
             Random rand = new Random();
-            do
+            while (true)
             {
                 double bestScore = double.MinValue;
                 List<int> bestMoves = new List<int>();
@@ -48,20 +48,36 @@ namespace GameAi
                     state.MakeMove(move, Player.Player1);
                     double score = state.Minimax(maxDepth);
                     if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
-                    bestMoves.Add(move);
+                    if (score == bestScore) { bestMoves.Add(move); }
                     state.UndoMove(move, Player.Player1);
                 }
                 state.MakeMove(bestMoves[rand.Next(bestMoves.Count)], Player.Player1);
                 Console.WriteLine(state);
-                if (state.Winner == Player.Player1) { Console.WriteLine("I won."); break; }
-                else if (state.IsTerminal) { Console.WriteLine("It's a tie."); break; }
+                if (state.Winner == Player.Player1) 
+                { 
+                    Console.WriteLine("I won."); 
+                    break; 
+                }
+                else if (state.IsTerminal) 
+                { 
+                    Console.WriteLine("It's a tie."); 
+                    break; 
+                }
                 Console.Write("Your move? ");
                 int playerMove = Convert.ToInt32(Console.ReadLine());
                 state.MakeMove(playerMove, Player.Player2);
-                if (state.Winner == Player.Player2) { Console.WriteLine("You won."); break; }
-                else if (state.IsTerminal) { Console.WriteLine("It's a tie."); break; }
-            }
-            while (true);
+                if (state.Winner == Player.Player2) 
+                { 
+                    Console.WriteLine(state); 
+                    Console.WriteLine("You won."); 
+                    break; 
+                }
+                else if (state.IsTerminal) 
+                { 
+                    Console.WriteLine("It's a tie."); 
+                    break; 
+                }
+            } 
         }
 
         public static double Minimax(this IGameState node, int depth, Player player = Player.Player2)
