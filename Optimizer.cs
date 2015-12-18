@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GameAi
 {
@@ -37,18 +38,20 @@ namespace GameAi
 
         public static void Play(IGameState state, int maxDepth = int.MaxValue)
         {
+            Random rand = new Random();
             do
             {
                 double bestScore = double.MinValue;
-                int bestMove = -1;
+                List<int> bestMoves = new List<int>();
                 foreach (int move in state.AvailableMoves)
                 {
                     state.MakeMove(move, Player.Player1);
                     double score = state.Minimax(maxDepth);
-                    if (score > bestScore) { bestScore = score; bestMove = move; }
+                    if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
+                    bestMoves.Add(move);
                     state.UndoMove(move, Player.Player1);
                 }
-                state.MakeMove(bestMove, Player.Player1);
+                state.MakeMove(bestMoves[rand.Next(bestMoves.Count)], Player.Player1);
                 Console.WriteLine(state);
                 if (state.Winner == Player.Player1) { Console.WriteLine("I won."); break; }
                 else if (state.IsTerminal) { Console.WriteLine("It's a tie."); break; }
