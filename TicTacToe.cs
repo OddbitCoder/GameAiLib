@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace GameAiLib
 {
-    class TicTacToeBoard : IGameBoard
+    class TicTacToe : IGame
     {
         private byte[][] mBoard
             = new byte[3][];
@@ -12,7 +12,7 @@ namespace GameAiLib
         private int mDepth
             = 0;
 
-        public TicTacToeBoard()
+        public TicTacToe()
         {
             for (int row = 0; row < 3; row++)
             {
