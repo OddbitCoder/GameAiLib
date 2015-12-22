@@ -6,7 +6,7 @@ namespace GameAiLibTest
     {
         static void Main(string[] args)
         {
-            Game.Play(new TicTacToe(), playerStarts: true, playerAi: new PerfectPlayer());
+            Game.Play(new TicTacToe(), playerStarts: false);
         }
     }
 }
