@@ -6,7 +6,7 @@ namespace GameAiLibTest
     {
         static void Main(string[] args)
         {
-            Game.Play(new TicTacToe(), playerStarts: false);
+            Game.Play(new TicTacToe(), playerStarts: true, maxDepth: 9, difficultyLevel: 0);
         }
     }
 }
