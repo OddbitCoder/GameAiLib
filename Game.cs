@@ -14,7 +14,6 @@ namespace GameAiLib
             {
                 if (!skipFirstMove)
                 {
-                    List<KeyValuePair<int, double>> moves = new List<KeyValuePair<int, double>>();
                     double bestScore = double.MinValue;
                     double bestShallowScore = double.MinValue;
                     List<int> bestMoves = new List<int>();
