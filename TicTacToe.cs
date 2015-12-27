@@ -35,12 +35,9 @@ namespace GameAiLib
             get { return mWinner != null || IsFull; }
         }
 
-        public double Score
+        public double Score(SkillLevel skillLevel)
         {
-            get 
-            {
-                return mWinner == null ? 0 : (mWinner == Player.Player1 ? 1 : -1);
-            }
+            return mWinner == null ? 0 : (mWinner == Player.Player1 ? 1 : -1);
         }
 
         public int[] AvailableMoves
@@ -78,7 +75,7 @@ namespace GameAiLib
             }
         }
 
-        public double EvalComputerMoveShallow(int move)
+        public double EvalComputerMoveShallow(int move, SkillLevel skillLevel)
         {
             int row = move / 3;
             int col = move % 3;
@@ -134,6 +131,17 @@ namespace GameAiLib
             mBoard[row][col] = 0;
             mWinner = null;
             mDepth--;
+        }
+
+        public void SwapPlayers()
+        {
+            foreach (byte[] row in mBoard)
+            {
+                for (int col = 0; col < 3; col++)
+                {
+                    row[col] = row[col] == 1 ? (byte)2 : (row[col] == 2 ? (byte)1 : (byte)0);
+                }
+            }
         }
 
         public override string ToString()
