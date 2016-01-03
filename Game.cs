@@ -128,8 +128,10 @@ namespace GameAiLib
         }
 
         public static void Play(IGame game, bool playerStarts, int minDepth = 2, int maxDepth = int.MaxValue, 
-            double deepeningProbability = 1, SkillLevel skillLevel = SkillLevel.Normal)
+            double deepeningProbability = 1, SkillLevel skillLevel = SkillLevel.Normal, Dictionary<object, int> memory = null)
         {
+            List<object> gameStates = new List<object>();
+            object state;
             Random rng = new Random();
             bool skipFirstMove = playerStarts;
             while (true)
@@ -139,6 +141,18 @@ namespace GameAiLib
                     double bestScore = double.MinValue;
                     double bestShallowScore = double.MinValue;
                     List<int> bestMoves = new List<int>();
+                    state = game.State;
+                    if (state != null) { gameStates.Add(state); }
+                    double effectiveDeepeningProbability = deepeningProbability;
+                    if (memory != null)
+                    {
+                        int count = 0;
+                        memory.TryGetValue(state, out count);
+                        Console.WriteLine("State {0} (observed {1} times)", state, count);
+                        effectiveDeepeningProbability = Math.Min(1.0, deepeningProbability + (double)count * 0.1);
+                        Console.WriteLine("Deepening probability: {0}", deepeningProbability);
+                        Console.WriteLine("Effective deepening probability: {0}", effectiveDeepeningProbability);
+                    }
                     foreach (int mv in game.AvailableMoves)
                     {
                         double shallowScore = game.EvalComputerMoveShallow(mv, skillLevel);
@@ -146,7 +160,7 @@ namespace GameAiLib
                         int depth = minDepth;
                         for (int i = minDepth; i < maxDepth; i++)
                         {
-                            if (rng.NextDouble() < 1.0 - deepeningProbability) { break; }
+                            if (rng.NextDouble() < 1.0 - effectiveDeepeningProbability) { break; }
                             depth++;
                         }
                         double score = game.AlphaBeta(depth, double.MinValue, double.MaxValue, skillLevel);
@@ -168,6 +182,17 @@ namespace GameAiLib
                     Console.WriteLine("My move: {0}", move);
                     game.MakeMove(move, Player.Player1); 
                     Console.WriteLine(game);
+
+                    //{
+                    //    TicTacToe ttt = (TicTacToe)game;
+                    //    for (int i = 0; i < 4; i++)
+                    //    {
+                    //        ttt.Rotate();
+                    //        Console.WriteLine(ttt);
+                    //        Console.WriteLine();
+                    //    }
+                    //}
+                    
                     if (game.Winner == Player.Player1)
                     {
                         Console.WriteLine("I won.");
@@ -199,7 +224,16 @@ namespace GameAiLib
                     Console.WriteLine("It's a tie."); 
                     break; 
                 }
-            } 
+            }
+            if (memory != null)
+            {
+                foreach (object gameState in gameStates)
+                {
+                    int count;
+                    if (memory.TryGetValue(gameState, out count)) { memory[gameState] = count + 1; }
+                    else { memory.Add(gameState, 1); }
+                }
+            }
         }
 
         public static double AlphaBeta(this IGame node, int maxDepth, double alpha, double beta, SkillLevel skillLevel, Player player = Player.Player2)
