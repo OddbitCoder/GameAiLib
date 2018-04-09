@@ -3,51 +3,46 @@ using System.Linq;
 
 namespace GameAiLib
 {
-    class TicTacToeBoard : IGameBoard
+    public class TicTacToe : IGame
     {
-        private byte[][] mBoard
+        private byte[][] board
             = new byte[3][];
-        private Player? mWinner
+        private Player? winner
             = null;
-        private int mDepth
+        private int depth
             = 0;
 
-        public TicTacToeBoard()
+        public TicTacToe()
         {
             for (int row = 0; row < 3; row++)
             {
-                mBoard[row] = new byte[3];
+                board[row] = new byte[3];
             }
         }
 
         public Player? Winner
         {
-            get { return mWinner; }
+            get { return winner; }
         }
 
         private bool IsFull
         {
-            get { return mDepth == 9; }
+            get { return depth == 9; }
         }
 
-        public bool IsTerminal
+        public bool IsTerminalState
         {
-            get { return mWinner != null || IsFull; }
-        }
-
-        public double Score
-        {
-            get { return (mWinner == null ? 0 : (mWinner == Player.Player1 ? (10 - mDepth) : (-10 + mDepth))); }
+            get { return winner != null || IsFull; }
         }
 
         public int[] AvailableMoves
         {
             get
             {
-                int[] moves = new int[9 - mDepth];
+                var moves = new int[9 - depth];
                 int offset = 0;
                 int i = 0;
-                foreach (byte[] row in mBoard)
+                foreach (var row in board)
                 {
                     for (int col = 0; col < 3; col++)
                     {
@@ -63,15 +58,15 @@ namespace GameAiLib
         {
             int row = move / 3;
             int col = move % 3;
-            mBoard[row][col] = (byte)(player == Player.Player1 ? 1 : 2);
-            mDepth++;
+            board[row][col] = (byte)(player == Player.Player1 ? 1 : 2);
+            depth++;
             // check if this resulted in a win
-            if ((mBoard[row][0] == mBoard[row][1] && mBoard[row][1] == mBoard[row][2]) ||
-                (mBoard[0][col] == mBoard[1][col] && mBoard[1][col] == mBoard[2][col]) ||
-                (row == col && mBoard[0][0] == mBoard[1][1] && mBoard[1][1] == mBoard[2][2]) ||
-                (row + col == 2 && mBoard[0][2] == mBoard[1][1] && mBoard[1][1] == mBoard[2][0]))
+            if ((board[row][0] == board[row][1] && board[row][1] == board[row][2]) ||
+                (board[0][col] == board[1][col] && board[1][col] == board[2][col]) ||
+                (row == col && board[0][0] == board[1][1] && board[1][1] == board[2][2]) ||
+                (row + col == 2 && board[0][2] == board[1][1] && board[1][1] == board[2][0]))
             {
-                mWinner = player;
+                winner = player;
             }
         }
 
@@ -79,17 +74,17 @@ namespace GameAiLib
         {
             int row = move / 3;
             int col = move % 3;
-            mBoard[row][col] = 0;
-            mWinner = null;
-            mDepth--;
+            board[row][col] = 0;
+            winner = null;
+            depth--;
         }
 
         public override string ToString()
         {
-            string str = "";
+            var str = "";
             int i = 0;
-            string[] moves = new string[] { "012", "345", "678" };
-            foreach (byte[] row in mBoard)
+            var moves = new string[] { "012", "345", "678" };
+            foreach (var row in board)
             {
                 str += row.Select(x => x == 0 ? "·" : (x == 1 ? "o" : "x")).Aggregate((x, y) => x + y) + " " + moves[i++] + Environment.NewLine;
             }

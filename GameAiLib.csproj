@@ -8,8 +8,8 @@
     <ProjectGuid>{825630B7-2158-450A-B191-81C7EF554126}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TicTacToe</RootNamespace>
-    <AssemblyName>TicTacToe</AssemblyName>
+    <RootNamespace>GameAiLib</RootNamespace>
+    <AssemblyName>GameAiLib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -44,9 +44,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Game.cs" />
+    <Compile Include="GenericBrain.cs" />
+    <Compile Include="IBrain.cs" />
+    <Compile Include="IGame.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TicTacToeBoard.cs" />
+    <Compile Include="RandomBrain.cs" />
+    <Compile Include="TicTacToe.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

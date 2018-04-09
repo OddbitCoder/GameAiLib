@@ -1,61 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace GameAiLib
 {
-    public enum Player
-    { 
-        Player1, // maximizing player (computer)
-        Player2
-    }
-
-    public interface IGameBoard
-    {
-        bool IsTerminal { get; }
-        double Score { get; } // give score for Player 1 
-        int[] AvailableMoves { get; }
-        void MakeMove(int move, Player player);
-        void UndoMove(int move, Player player);
-        Player? Winner { get; }
-    }
-
     public static class Game
     {
-        public static Player OtherPlayer(this Player player)
+        public static Player? Play(IGame game, IBrain player1, IBrain player2, bool player1Starts = true)
         {
-            return player == Player.Player1 ? Player.Player2 : Player.Player1;
-        }
-
-        public static void Play(IGameBoard board, bool playerStarts = false, int maxDepth = int.MaxValue)
-        {
-            Random rand = new Random();
-            bool skipFirstMove = playerStarts;
+            if (player1Starts)
+            {
+                player1.MakeMove(game, Player.Player1);
+                if (game.Winner != null) { return Player.Player1; }
+                if (game.IsTerminalState) { return null; }
+            }
             while (true)
             {
-                if (!skipFirstMove)
+                player2.MakeMove(game, Player.Player2);
+                if (game.Winner != null) { return Player.Player2; }
+                if (game.IsTerminalState) { return null; }
+                player1.MakeMove(game, Player.Player1);
+                if (game.Winner != null) { return Player.Player1; }
+                if (game.IsTerminalState) { return null; }
+            }
+        }
+
+        public static void Play(IGame game, IBrain brain, bool humanStarts = false)
+        {
+            bool skipPlayer1 = humanStarts;
+            while (true)
+            {
+                if (!skipPlayer1)
                 {
-                    double bestScore = double.MinValue;
-                    List<int> bestMoves = new List<int>();
-                    foreach (int move in board.AvailableMoves)
-                    {
-                        board.MakeMove(move, Player.Player1);
-#if MINIMAX
-                        double score = board.Minimax(maxDepth);
-#else
-                        double score = board.AlphaBeta(maxDepth, double.MinValue, double.MaxValue);
-#endif
-                        if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
-                        if (score == bestScore) { bestMoves.Add(move); }
-                        board.UndoMove(move, Player.Player1);
-                    }
-                    board.MakeMove(bestMoves[rand.Next(bestMoves.Count)], Player.Player1);
-                    Console.WriteLine(board);
-                    if (board.Winner == Player.Player1)
+                    brain.MakeMove(game, Player.Player1);
+                    Console.WriteLine(game);
+                    if (game.Winner == Player.Player1)
                     {
                         Console.WriteLine("I won.");
                         break;
                     }
-                    else if (board.IsTerminal)
+                    else if (game.IsTerminalState)
                     {
                         Console.WriteLine("It's a tie.");
                         break;
@@ -63,77 +45,77 @@ namespace GameAiLib
                 }
                 else
                 {
-                    skipFirstMove = false;
-                    Console.WriteLine(board);
+                    skipPlayer1 = false;
+                    Console.WriteLine(game);
                 }
                 Console.Write("Your move? ");
                 int playerMove = Convert.ToInt32(Console.ReadLine());
-                board.MakeMove(playerMove, Player.Player2);
-                if (board.Winner == Player.Player2) 
+                game.MakeMove(playerMove, Player.Player2);
+                if (game.Winner == Player.Player2) 
                 {
-                    Console.WriteLine(board); 
+                    Console.WriteLine(game); 
                     Console.WriteLine("You won."); 
                     break; 
                 }
-                else if (board.IsTerminal) 
+                else if (game.IsTerminalState) 
                 {
-                    Console.WriteLine(board); 
+                    Console.WriteLine(game); 
                     Console.WriteLine("It's a tie."); 
                     break; 
                 }
             } 
         }
 
-        public static double Minimax(this IGameBoard node, int depth, Player player = Player.Player2)
-        {
-            if (depth == 0 || node.IsTerminal) { return node.Score; }
-            double bestVal = player == Player.Player1 ? double.MinValue : double.MaxValue;
-            foreach (int move in node.AvailableMoves)
-            {
-                node.MakeMove(move, player); 
-                double val = Minimax(node, depth - 1, player.OtherPlayer());
-                node.UndoMove(move, player);
-                if (player == Player.Player1)
-                {
-                    if (val.CompareTo(bestVal) > 0) { bestVal = val; }
-                }
-                else
-                {
-                    if (val.CompareTo(bestVal) < 0) { bestVal = val; }
-                }
-            }
-            return bestVal;
-        }
+        //public static double Minimax(this IGame node, int depth, Player player = Player.Player2)
+        //{
+        //    if (depth == 0 || node.IsTerminalState) { return node.Score; }
+        //    double bestVal = player == Player.Player1 ? double.MinValue : double.MaxValue;
+        //    foreach (int move in node.AvailableMoves)
+        //    {
+        //        node.MakeMove(move, player); 
+        //        double val = Minimax(node, depth - 1, player.OtherPlayer());
+        //        node.UndoMove(move, player);
+        //        if (player == Player.Player1)
+        //        {
+        //            if (val.CompareTo(bestVal) > 0) { bestVal = val; }
+        //        }
+        //        else
+        //        {
+        //            if (val.CompareTo(bestVal) < 0) { bestVal = val; }
+        //        }
+        //    }
+        //    return bestVal;
+        //}
 
-        public static double AlphaBeta(this IGameBoard node, int depth, double alpha, double beta, Player player = Player.Player2)
-        {
-            if (depth == 0 || node.IsTerminal) { return node.Score; }
-            if (player == Player.Player1)
-            {
-                double v = double.MinValue;
-                foreach (int move in node.AvailableMoves)
-                {
-                    node.MakeMove(move, player); 
-                    v = Math.Max(v, AlphaBeta(node, depth - 1, alpha, beta, Player.Player2));
-                    node.UndoMove(move, player);
-                    alpha = Math.Max(alpha, v);
-                    if (beta <= alpha) { break; }
-                }
-                return v;
-            }
-            else
-            {
-                double v = double.MaxValue;
-                foreach (int move in node.AvailableMoves)
-                {
-                    node.MakeMove(move, player); 
-                    v = Math.Min(v, AlphaBeta(node, depth - 1, alpha, beta, Player.Player1));
-                    node.UndoMove(move, player);
-                    beta = Math.Min(beta, v);
-                    if (beta <= alpha) { break; }
-                }
-                return v;
-            }
-        }
+        //public static double AlphaBeta(this IGame node, int depth, double alpha, double beta, Player player = Player.Player2)
+        //{
+        //    if (depth == 0 || node.IsTerminalState) { return node.Score; }
+        //    if (player == Player.Player1)
+        //    {
+        //        double v = double.MinValue;
+        //        foreach (int move in node.AvailableMoves)
+        //        {
+        //            node.MakeMove(move, player); 
+        //            v = Math.Max(v, AlphaBeta(node, depth - 1, alpha, beta, Player.Player2));
+        //            node.UndoMove(move, player);
+        //            alpha = Math.Max(alpha, v);
+        //            if (beta <= alpha) { break; }
+        //        }
+        //        return v;
+        //    }
+        //    else
+        //    {
+        //        double v = double.MaxValue;
+        //        foreach (int move in node.AvailableMoves)
+        //        {
+        //            node.MakeMove(move, player); 
+        //            v = Math.Min(v, AlphaBeta(node, depth - 1, alpha, beta, Player.Player1));
+        //            node.UndoMove(move, player);
+        //            beta = Math.Min(beta, v);
+        //            if (beta <= alpha) { break; }
+        //        }
+        //        return v;
+        //    }
+        //}
     }
 }
