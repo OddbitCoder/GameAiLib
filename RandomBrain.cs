@@ -2,7 +2,7 @@
 {
     public class RandomBrain : GenericBrain
     {
-        public override double EvalGame(IGame game)
+        protected override double EvalGame(IGame game, Player player)
         {
             return 1;
         }

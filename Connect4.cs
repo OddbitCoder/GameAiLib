@@ -3,19 +3,8 @@ using System.Linq;
 
 namespace GameAiLib
 {
-    public class TicTacToe : IGame
+    public class Connect4 : IGame
     {
-        public class MinimaxBrain : GenericMinimaxBrain
-        {
-            protected override double MinimaxEval(IGame _game, Player player)
-            {
-                var game = (TicTacToe)_game;
-                if (game.winner == null) { return 0; }
-                if (game.winner == player) { return 1; }
-                else { return -1; }
-            }
-        }
-
         private byte[][] board
             = new byte[3][];
         private Player? winner
@@ -23,7 +12,7 @@ namespace GameAiLib
         private int depth
             = 0;
 
-        public TicTacToe()
+        public Connect4()
         {
             for (int row = 0; row < 3; row++)
             {

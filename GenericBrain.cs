@@ -15,7 +15,7 @@ namespace GameAiLib
             foreach (int move in game.AvailableMoves)
             {
                 game.MakeMove(move, player);
-                double score = EvalGame(game);
+                double score = EvalGame(game, player);
                 if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                 if (score == bestScore) { bestMoves.Add(move); }
                 game.UndoMove(move, player);
@@ -23,6 +23,6 @@ namespace GameAiLib
             game.MakeMove(bestMoves[rng.Next(bestMoves.Count)], player);
         }
 
-        public abstract double EvalGame(IGame game);
+        protected abstract double EvalGame(IGame game, Player player);
     }
 }
