@@ -1,21 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace GameAiLib
 {
     public class TicTacToe : IGame
     {
-        public class MinimaxBrain : GenericMinimaxBrain
-        {
-            protected override double MinimaxEval(IGame _game, Player player)
-            {
-                var game = (TicTacToe)_game;
-                if (game.winner == null) { return 0; }
-                if (game.winner == player) { return 1; }
-                else { return -1; }
-            }
-        }
-
         private byte[][] board
             = new byte[3][];
         private Player? winner
@@ -46,26 +36,23 @@ namespace GameAiLib
             get { return winner != null || IsFull; }
         }
 
-        public int[] AvailableMoves
+        public IEnumerable<int> AvailableMoves(Player player)
         {
-            get
+            var moves = new int[9 - depth];
+            int offset = 0;
+            int i = 0;
+            foreach (var row in board)
             {
-                var moves = new int[9 - depth];
-                int offset = 0;
-                int i = 0;
-                foreach (var row in board)
+                for (int col = 0; col < 3; col++)
                 {
-                    for (int col = 0; col < 3; col++)
-                    {
-                        if (row[col] == 0) { moves[i++] = offset + col; }
-                    }
-                    offset += 3;
+                    if (row[col] == 0) { moves[i++] = offset + col; }
                 }
-                return moves;
+                offset += 3;
             }
+            return moves;
         }
 
-        public void MakeMove(int move, Player player)
+        public object MakeMove(int move, Player player)
         {
             int row = move / 3;
             int col = move % 3;
@@ -79,15 +66,21 @@ namespace GameAiLib
             {
                 winner = player;
             }
+            return null;
         }
 
-        public void UndoMove(int move, Player player)
+        public void UndoMove(int move, Player player, object undoToken)
         {
             int row = move / 3;
             int col = move % 3;
             board[row][col] = 0;
             winner = null;
             depth--;
+        }
+
+        public bool CheckIntegrity()
+        {
+            return true;
         }
 
         public override string ToString()

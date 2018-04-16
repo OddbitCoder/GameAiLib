@@ -12,13 +12,13 @@ namespace GameAiLib
         {
             double bestScore = double.MinValue;
             var bestMoves = new List<int>();
-            foreach (int move in game.AvailableMoves)
+            foreach (int move in game.AvailableMoves(player))
             {
-                game.MakeMove(move, player);
+                var undoToken = game.MakeMove(move, player);
                 double score = EvalGame(game, player);
                 if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                 if (score == bestScore) { bestMoves.Add(move); }
-                game.UndoMove(move, player);
+                game.UndoMove(move, player, undoToken);
             }
             game.MakeMove(bestMoves[rng.Next(bestMoves.Count)], player);
         }

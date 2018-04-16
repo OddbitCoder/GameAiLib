@@ -53,6 +53,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomBrain.cs" />
     <Compile Include="Connect4.cs" />
+    <Compile Include="SimpleMinimaxBrain.cs" />
     <Compile Include="TicTacToe.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

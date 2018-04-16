@@ -1,23 +1,70 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace GameAiLib
 {
     public class Connect4 : IGame
     {
-        private byte[][] board
-            = new byte[3][];
-        private Player? winner
-            = null;
-        private int depth
-            = 0;
-
-        public Connect4()
+        public struct UndoToken
         {
-            for (int row = 0; row < 3; row++)
-            {
-                board[row] = new byte[3];
-            }
+            public ulong position;
+            public ulong mask;
+        }
+
+        private ulong position;
+        private ulong mask;
+        private int moves;
+        private Player? winner;
+
+        public int MoveScore(Player player)
+        {
+            return PopCount(ComputeWinningPosition(player == Player.Player1 ? position : position ^ mask));
+        }
+
+        private int PopCount(ulong m)
+        {
+            int c = 0;
+            for (c = 0; m != 0; c++) m &= m - 1;
+            return c;
+        }
+
+        private const ulong bottomMask
+            = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
+        private const ulong boardMask
+            = bottomMask * ((1ul << 6) - 1);
+
+        private ulong ComputeWinningPosition(ulong position)
+        {
+            int HEIGHT = 6;
+
+            // vertical
+            ulong r = (position << 1) & (position << 2) & (position << 3);
+
+            // horizontal
+            ulong p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
+            r |= p & (position << 3 * (HEIGHT + 1));
+            r |= p & (position >> (HEIGHT + 1));
+            p = (position >> (HEIGHT + 1)) & (position >> 2 * (HEIGHT + 1));
+            r |= p & (position << (HEIGHT + 1));
+            r |= p & (position >> 3 * (HEIGHT + 1));
+
+            // diagonal 1
+            p = (position << HEIGHT) & (position << 2 * HEIGHT);
+            r |= p & (position << 3 * HEIGHT);
+            r |= p & (position >> HEIGHT);
+            p = (position >> HEIGHT) & (position >> 2 * HEIGHT);
+            r |= p & (position << HEIGHT);
+            r |= p & (position >> 3 * HEIGHT);
+
+            // diagonal 2
+            p = (position << (HEIGHT + 2)) & (position << 2 * (HEIGHT + 2));
+            r |= p & (position << 3 * (HEIGHT + 2));
+            r |= p & (position >> (HEIGHT + 2));
+            p = (position >> (HEIGHT + 2)) & (position >> 2 * (HEIGHT + 2));
+            r |= p & (position << (HEIGHT + 2));
+            r |= p & (position >> 3 * (HEIGHT + 2));
+
+            return r & (boardMask ^ mask);
         }
 
         public Player? Winner
@@ -27,7 +74,7 @@ namespace GameAiLib
 
         private bool IsFull
         {
-            get { return depth == 9; }
+            get { return moves == 6 * 7; }
         }
 
         public bool IsTerminalState
@@ -35,60 +82,104 @@ namespace GameAiLib
             get { return winner != null || IsFull; }
         }
 
-        public int[] AvailableMoves
+        //return PopCount(ComputeWinningPosition(player == Player.Player1 ? position : position ^ mask));
+        public IEnumerable<int> AvailableMoves(Player player)
         {
-            get
+            //ulong pos = player == Player.Player1 ? position : position ^ mask;
+            var list = new List<int>(7);
+            for (int col = 0; col < 7; col++)
             {
-                var moves = new int[9 - depth];
-                int offset = 0;
-                int i = 0;
-                foreach (var row in board)
+                if (((1ul << 5 << (col * 7)) & mask) == 0)
                 {
-                    for (int col = 0; col < 3; col++)
-                    {
-                        if (row[col] == 0) { moves[i++] = offset + col; }
-                    }
-                    offset += 3;
+                    list.Add(col);
                 }
-                return moves;
             }
+            return list;
         }
 
-        public void MakeMove(int move, Player player)
+        public object MakeMove(int move, Player player)
         {
-            int row = move / 3;
-            int col = move % 3;
-            board[row][col] = (byte)(player == Player.Player1 ? 1 : 2);
-            depth++;
-            // check if this resulted in a win
-            if ((board[row][0] == board[row][1] && board[row][1] == board[row][2]) ||
-                (board[0][col] == board[1][col] && board[1][col] == board[2][col]) ||
-                (row == col && board[0][0] == board[1][1] && board[1][1] == board[2][2]) ||
-                (row + col == 2 && board[0][2] == board[1][1] && board[1][1] == board[2][0]))
+            var undoToken = new UndoToken {
+                position = position,
+                mask = mask
+            };
+            ulong pos;
+            if (player == Player.Player1)
             {
-                winner = player;
+                position ^= mask;
+                mask |= mask + (1ul << (move * 7));
+                position ^= mask;
+                pos = position;
             }
+            else
+            {
+                mask |= mask + (1ul << (move * 7));
+                pos = position ^ mask;
+            }
+            moves++;
+            // check if this resulted in a win
+            // horizontal
+            ulong m = pos & (pos >> 7);
+            if ((m & (m >> 14)) != 0) { winner = player; }
+            // diag 1
+            m = pos & (pos >> 6);
+            if ((m & (m >> 12)) != 0) { winner = player; }
+            // diag 2
+            m = pos & (pos >> 8);
+            if ((m & (m >> 16)) != 0) { winner = player; }
+            // vertical
+            m = pos & (pos >> 1);
+            if ((m & (m >> 2)) != 0) { winner = player; }
+            return undoToken;
         }
 
-        public void UndoMove(int move, Player player)
+        public void UndoMove(int move, Player player, object _undoToken)
         {
-            int row = move / 3;
-            int col = move % 3;
-            board[row][col] = 0;
+            var undoToken = (UndoToken)_undoToken;
+            position = undoToken.position;
+            mask = undoToken.mask;
             winner = null;
-            depth--;
+            moves--;
+        }
+
+        public bool CheckIntegrity()
+        {
+            var boardStr = ToString();
+            int countPlayer1 = 0, countPlayer2 = 0;
+            foreach (var ch in boardStr)
+            {
+                switch (ch)
+                {
+                    case 'o': countPlayer1++;
+                        break;
+                    case 'x': countPlayer2++;
+                        break;
+                }
+            }
+            return Math.Abs(countPlayer1 - countPlayer2) <= 1 && moves == countPlayer1 + countPlayer2;
         }
 
         public override string ToString()
         {
-            var str = "";
-            int i = 0;
-            var moves = new string[] { "012", "345", "678" };
-            foreach (var row in board)
+            var posPlayer1 = Convert.ToString((long)position, 2).PadLeft(49, '0');
+            var posPlayer2 = Convert.ToString((long)(position ^ mask), 2).PadLeft(49, '0');
+            var board = new char[49, 49];
+            for (int i = 0, j = 48; i < 49; i++, j--)
             {
-                str += row.Select(x => x == 0 ? "·" : (x == 1 ? "o" : "x")).Aggregate((x, y) => x + y) + " " + moves[i++] + Environment.NewLine;
+                int row = i % 7;
+                int col = i / 7;
+                board[row, col] = posPlayer1[j] == '1' ? 'o' : (posPlayer2[j] == '1' ? 'x' : '·');
             }
-            return str.TrimEnd();
+            var boardStr = "";
+            for (int row = 5; row >= 0; row--)
+            {
+                for (int col = 0; col < 7; col++)
+                {
+                    boardStr += board[row, col] + " ";
+                }
+                boardStr += Environment.NewLine;
+            }
+            return boardStr.TrimEnd();
         }
     }
 }

@@ -11,11 +11,17 @@ namespace GameAiLib
                 if (player1Starts)
                 {
                     player1.MakeMove(game, Player.Player1);
+#if CHECK_INTEGRITY
+                    if (!game.CheckIntegrity()) { Console.WriteLine("Integrity broken!!!"); }
+#endif
                     if (game.Winner != null) { return Player.Player1; }
                     if (game.IsTerminalState) { return null; }
                 }
                 player1Starts = true;
                 player2.MakeMove(game, Player.Player2);
+#if CHECK_INTEGRITY
+                if (!game.CheckIntegrity()) { Console.WriteLine("Integrity broken!!!"); }
+#endif
                 if (game.Winner != null) { return Player.Player2; }
                 if (game.IsTerminalState) { return null; }
             }
@@ -30,6 +36,8 @@ namespace GameAiLib
                 {
                     brain.MakeMove(game, Player.Player1);
                     Console.WriteLine(game);
+                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player1));
+                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player2));
                     if (game.Winner == Player.Player1)
                     {
                         Console.WriteLine("I won.");
@@ -45,9 +53,11 @@ namespace GameAiLib
                 {
                     skipPlayer1 = false;
                     Console.WriteLine(game);
+                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player1));
+                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player2));
                 }
                 Console.Write("Your move? ");
-                int playerMove = Convert.ToInt32(Console.ReadLine());
+                int playerMove = Convert.ToInt32(Console.ReadLine()); // TODO: repeat this if the move is not valid
                 game.MakeMove(playerMove, Player.Player2);
                 if (game.Winner == Player.Player2) 
                 {
