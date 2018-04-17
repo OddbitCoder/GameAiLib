@@ -36,8 +36,8 @@ namespace GameAiLib
                 {
                     brain.MakeMove(game, Player.Player1);
                     Console.WriteLine(game);
-                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player1));
-                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player2));
+                    Console.WriteLine(((Connect4.MinimaxBrain)brain).MoveScore(Player.Player1, (Connect4)game));
+                    Console.WriteLine(((Connect4.MinimaxBrain)brain).MoveScore(Player.Player2, (Connect4)game));
                     if (game.Winner == Player.Player1)
                     {
                         Console.WriteLine("I won.");
@@ -53,8 +53,8 @@ namespace GameAiLib
                 {
                     skipPlayer1 = false;
                     Console.WriteLine(game);
-                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player1));
-                    Console.WriteLine(((Connect4)game).MoveScore(Player.Player2));
+                    Console.WriteLine(((Connect4.MinimaxBrain)brain).MoveScore(Player.Player1, (Connect4)game));
+                    Console.WriteLine(((Connect4.MinimaxBrain)brain).MoveScore(Player.Player2, (Connect4)game));
                 }
                 Console.Write("Your move? ");
                 int playerMove = Convert.ToInt32(Console.ReadLine()); // TODO: repeat this if the move is not valid

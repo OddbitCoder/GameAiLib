@@ -11,61 +11,92 @@ namespace GameAiLib
             public ulong mask;
         }
 
+        public class MinimaxBrain : GenericMinimaxBrain
+        {
+            public MinimaxBrain(int maxDepth = int.MaxValue) : base(maxDepth)
+            {
+            }
+
+            protected override double MinimaxEval(IGame _game, Player player) 
+            {
+                var game = (Connect4)_game;
+                if (game.Winner == null)
+                {
+                    int scoreP1 = PopCount(ComputeWinningBits(game.position, game.mask));
+                    int scoreP2 = PopCount(ComputeWinningBits(game.position ^ game.mask, game.mask));
+                    return player == Player.Player1 ? (scoreP1 - scoreP2) : (scoreP2 - scoreP1);
+                }
+                if (game.Winner == player)
+                {
+                    return 6 * 7;
+                }
+                else
+                {
+                    return -6 * 7;
+                }
+            }
+
+            protected override IEnumerable<int> OrderMoves(IEnumerable<int> moves) // TODO
+            {
+                return moves;
+            }
+
+            private const ulong bottomMask
+                = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
+            private const ulong boardMask
+                = bottomMask * ((1ul << 6) - 1);
+
+            private ulong ComputeWinningBits(ulong position, ulong mask)
+            {
+                const int HEIGHT = 6;
+
+                // vertical
+                ulong r = (position << 1) & (position << 2) & (position << 3);
+
+                // horizontal
+                ulong p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
+                r |= p & (position << 3 * (HEIGHT + 1));
+                r |= p & (position >> (HEIGHT + 1));
+                p = (position >> (HEIGHT + 1)) & (position >> 2 * (HEIGHT + 1));
+                r |= p & (position << (HEIGHT + 1));
+                r |= p & (position >> 3 * (HEIGHT + 1));
+
+                // diagonal 1
+                p = (position << HEIGHT) & (position << 2 * HEIGHT);
+                r |= p & (position << 3 * HEIGHT);
+                r |= p & (position >> HEIGHT);
+                p = (position >> HEIGHT) & (position >> 2 * HEIGHT);
+                r |= p & (position << HEIGHT);
+                r |= p & (position >> 3 * HEIGHT);
+
+                // diagonal 2
+                p = (position << (HEIGHT + 2)) & (position << 2 * (HEIGHT + 2));
+                r |= p & (position << 3 * (HEIGHT + 2));
+                r |= p & (position >> (HEIGHT + 2));
+                p = (position >> (HEIGHT + 2)) & (position >> 2 * (HEIGHT + 2));
+                r |= p & (position << (HEIGHT + 2));
+                r |= p & (position >> 3 * (HEIGHT + 2));
+
+                return r & (boardMask ^ mask);
+            }
+
+            public int MoveScore(Player player, Connect4 game)
+            {
+                return PopCount(ComputeWinningBits(player == Player.Player1 ? game.position : game.position ^ game.mask, game.mask));
+            }
+
+            private int PopCount(ulong m)
+            {
+                int c = 0;
+                for (c = 0; m != 0; c++) { m &= m - 1; }
+                return c;
+            }
+        }
+
         private ulong position;
         private ulong mask;
         private int moves;
         private Player? winner;
-
-        public int MoveScore(Player player)
-        {
-            return PopCount(ComputeWinningPosition(player == Player.Player1 ? position : position ^ mask));
-        }
-
-        private int PopCount(ulong m)
-        {
-            int c = 0;
-            for (c = 0; m != 0; c++) m &= m - 1;
-            return c;
-        }
-
-        private const ulong bottomMask
-            = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
-        private const ulong boardMask
-            = bottomMask * ((1ul << 6) - 1);
-
-        private ulong ComputeWinningPosition(ulong position)
-        {
-            int HEIGHT = 6;
-
-            // vertical
-            ulong r = (position << 1) & (position << 2) & (position << 3);
-
-            // horizontal
-            ulong p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
-            r |= p & (position << 3 * (HEIGHT + 1));
-            r |= p & (position >> (HEIGHT + 1));
-            p = (position >> (HEIGHT + 1)) & (position >> 2 * (HEIGHT + 1));
-            r |= p & (position << (HEIGHT + 1));
-            r |= p & (position >> 3 * (HEIGHT + 1));
-
-            // diagonal 1
-            p = (position << HEIGHT) & (position << 2 * HEIGHT);
-            r |= p & (position << 3 * HEIGHT);
-            r |= p & (position >> HEIGHT);
-            p = (position >> HEIGHT) & (position >> 2 * HEIGHT);
-            r |= p & (position << HEIGHT);
-            r |= p & (position >> 3 * HEIGHT);
-
-            // diagonal 2
-            p = (position << (HEIGHT + 2)) & (position << 2 * (HEIGHT + 2));
-            r |= p & (position << 3 * (HEIGHT + 2));
-            r |= p & (position >> (HEIGHT + 2));
-            p = (position >> (HEIGHT + 2)) & (position >> 2 * (HEIGHT + 2));
-            r |= p & (position << (HEIGHT + 2));
-            r |= p & (position >> 3 * (HEIGHT + 2));
-
-            return r & (boardMask ^ mask);
-        }
 
         public Player? Winner
         {
@@ -82,10 +113,8 @@ namespace GameAiLib
             get { return winner != null || IsFull; }
         }
 
-        //return PopCount(ComputeWinningPosition(player == Player.Player1 ? position : position ^ mask));
         public IEnumerable<int> AvailableMoves(Player player)
         {
-            //ulong pos = player == Player.Player1 ? position : position ^ mask;
             var list = new List<int>(7);
             for (int col = 0; col < 7; col++)
             {

@@ -4,6 +4,13 @@ namespace GameAiLib
 {
     public abstract class GenericMinimaxBrain : GenericBrain
     {
+        private int maxDepth;
+
+        public GenericMinimaxBrain(int maxDepth = int.MaxValue)
+        {
+            this.maxDepth = maxDepth;
+        }
+
         private double Minimax(IGame game, int depth, Player player, bool maximize)
         {
             if (depth == 0 || game.IsTerminalState)
@@ -75,9 +82,9 @@ namespace GameAiLib
         protected override double EvalGame(IGame game, Player player)
         {
 #if SIMPLE_MINIMAX
-            return Minimax(game, /*maxDepth=*/int.MaxValue, player.OtherPlayer(), maximize: false);
+            return Minimax(game, maxDepth, player.OtherPlayer(), maximize: false);
 #else
-            return AlphaBeta(game, /*maxDepth=*/int.MaxValue, int.MinValue, int.MaxValue, player.OtherPlayer(), maximize: false);
+            return AlphaBeta(game, maxDepth, int.MinValue, int.MaxValue, player.OtherPlayer(), maximize: false);
 #endif
         }
 
