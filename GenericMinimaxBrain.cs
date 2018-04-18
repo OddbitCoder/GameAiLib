@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GameAiLib
 {
@@ -21,7 +22,7 @@ namespace GameAiLib
             if (maximize)
             {
                 double bestVal = double.MinValue;
-                foreach (int move in game.AvailableMoves(player))
+                foreach (int move in OrderedMoves(game, player))
                 {
                     var undoToken = game.MakeMove(move, player);
                     double v = Minimax(game, depth - 1, player.OtherPlayer(), maximize: false);
@@ -33,7 +34,7 @@ namespace GameAiLib
             else
             {
                 double bestVal = double.MaxValue;
-                foreach (int move in game.AvailableMoves(player))
+                foreach (int move in OrderedMoves(game, player))
                 {
                     var undoToken = game.MakeMove(move, player);
                     double v = Minimax(game, depth - 1, player.OtherPlayer(), maximize: true);
@@ -54,7 +55,7 @@ namespace GameAiLib
             if (maximize)
             {
                 double v = double.MinValue;
-                foreach (int move in game.AvailableMoves(player))
+                foreach (int move in OrderedMoves(game, player))
                 {
                     var undoToken = game.MakeMove(move, player);
                     v = Math.Max(v, AlphaBeta(game, depth - 1, alpha, beta, player.OtherPlayer(), maximize: false));
@@ -67,7 +68,7 @@ namespace GameAiLib
             else
             {
                 double v = double.MaxValue;
-                foreach (int move in game.AvailableMoves(player))
+                foreach (int move in OrderedMoves(game, player))
                 {
                     var undoToken = game.MakeMove(move, player);
                     v = Math.Min(v, AlphaBeta(game, depth - 1, alpha, beta, player.OtherPlayer(), maximize: true));
@@ -89,5 +90,10 @@ namespace GameAiLib
         }
 
         protected abstract double MinimaxEval(IGame game, Player player);
+
+        protected virtual IEnumerable<int> OrderedMoves(IGame game, Player player)
+        {
+            return game.AvailableMoves(player);
+        }
     }
 }

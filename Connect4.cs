@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace GameAiLib
@@ -22,8 +23,8 @@ namespace GameAiLib
                 var game = (Connect4)_game;
                 if (game.Winner == null)
                 {
-                    int scoreP1 = PopCount(ComputeWinningBits(game.position, game.mask));
-                    int scoreP2 = PopCount(ComputeWinningBits(game.position ^ game.mask, game.mask));
+                    int scoreP1 = PopCount(ComputeWinningPositions(game.position, game.mask));
+                    int scoreP2 = PopCount(ComputeWinningPositions(game.position ^ game.mask, game.mask));
                     return player == Player.Player1 ? (scoreP1 - scoreP2) : (scoreP2 - scoreP1);
                 }
                 if (game.Winner == player)
@@ -36,9 +37,12 @@ namespace GameAiLib
                 }
             }
 
-            protected override IEnumerable<int> OrderMoves(IEnumerable<int> moves) // TODO
+            private int[] order 
+                = new[] { 5, 3, 1, 0, 2, 4, 6 };
+
+            protected override IEnumerable<int> OrderedMoves(IGame game, Player player) 
             {
-                return moves;
+                return game.AvailableMoves(player).OrderBy(m => order[m]);
             }
 
             private const ulong bottomMask
@@ -46,7 +50,7 @@ namespace GameAiLib
             private const ulong boardMask
                 = bottomMask * ((1ul << 6) - 1);
 
-            private ulong ComputeWinningBits(ulong position, ulong mask)
+            private ulong ComputeWinningPositions(ulong position, ulong mask)
             {
                 const int HEIGHT = 6;
 
@@ -78,11 +82,6 @@ namespace GameAiLib
                 r |= p & (position >> 3 * (HEIGHT + 2));
 
                 return r & (boardMask ^ mask);
-            }
-
-            public int MoveScore(Player player, Connect4 game)
-            {
-                return PopCount(ComputeWinningBits(player == Player.Player1 ? game.position : game.position ^ game.mask, game.mask));
             }
 
             private int PopCount(ulong m)
@@ -208,7 +207,7 @@ namespace GameAiLib
                 }
                 boardStr += Environment.NewLine;
             }
-            return boardStr.TrimEnd();
+            return boardStr + "0 1 2 3 4 5 6";
         }
     }
 }

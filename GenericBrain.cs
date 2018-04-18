@@ -12,10 +12,11 @@ namespace GameAiLib
         {
             double bestScore = double.MinValue;
             var bestMoves = new List<int>();
-            foreach (int move in OrderMoves(game.AvailableMoves(player)))
+            foreach (int move in game.AvailableMoves(player))
             {
                 var undoToken = game.MakeMove(move, player);
                 double score = EvalGame(game, player);
+                Console.WriteLine($"{move}: {score}");
                 if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                 if (score == bestScore) { bestMoves.Add(move); }
                 game.UndoMove(move, player, undoToken);
@@ -24,10 +25,5 @@ namespace GameAiLib
         }
 
         protected abstract double EvalGame(IGame game, Player player);
-
-        protected virtual IEnumerable<int> OrderMoves(IEnumerable<int> moves)
-        {
-            return moves;
-        }
     }
 }
