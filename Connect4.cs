@@ -91,7 +91,7 @@ namespace GameAiLib
 
         public class MinimaxBrain : GenericMinimaxBrain
         {
-            public MinimaxBrain(int maxDepth = int.MaxValue) : base(maxDepth, new Cache())
+            public MinimaxBrain(int maxDepth = int.MaxValue) : base(maxDepth)
             {
             }
 

@@ -62,17 +62,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Game.cs" />
+    <Compile Include="GenericBrainNew.cs" />
     <Compile Include="GenericBrain.cs" />
+    <Compile Include="GenericNegamaxBrain.cs" />
+    <Compile Include="IBrainNew.cs" />
     <Compile Include="IBrain.cs" />
     <Compile Include="ICache.cs" />
+    <Compile Include="IGameNew.cs" />
     <Compile Include="IGame.cs" />
     <Compile Include="GenericMinimaxBrain.cs" />
     <Compile Include="Player.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RandomBrainNew.cs" />
     <Compile Include="RandomBrain.cs" />
     <Compile Include="Connect4.cs" />
+    <Compile Include="SimpleNegamaxBrain.cs" />
     <Compile Include="SimpleMinimaxBrain.cs" />
+    <Compile Include="TicTacToeNew.cs" />
     <Compile Include="TicTacToe.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

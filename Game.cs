@@ -11,21 +11,58 @@ namespace GameAiLib
                 if (player1Starts)
                 {
                     player1.MakeMove(game, Player.Player1);
-#if CHECK_INTEGRITY
-                    if (!game.CheckIntegrity()) { Console.WriteLine("Integrity broken!!!"); }
-#endif
                     if (game.Winner != null) { return Player.Player1; }
                     if (game.IsTerminalState) { return null; }
                 }
                 player1Starts = true;
                 player2.MakeMove(game, Player.Player2);
-#if CHECK_INTEGRITY
-                if (!game.CheckIntegrity()) { Console.WriteLine("Integrity broken!!!"); }
-#endif
                 if (game.Winner != null) { return Player.Player2; }
                 if (game.IsTerminalState) { return null; }
             }
         }
+
+        public static void PlayNew(IGameNew game, IBrainNew brain)
+        {
+            bool skipPlayer1 = game.CurrentPlayer != Player.Player1;
+            while (true)
+            {
+                if (!skipPlayer1)
+                {
+                    brain.MakeMove(game);
+                    Console.WriteLine(game);
+                    if (game.Winner == Player.Player1)
+                    {
+                        Console.WriteLine("I won.");
+                        break;
+                    }
+                    else if (game.IsTerminalState)
+                    {
+                        Console.WriteLine("It's a tie.");
+                        break;
+                    }
+                }
+                else
+                {
+                    skipPlayer1 = false;
+                    Console.WriteLine(game);
+                }
+                Console.Write("Your move? ");
+                int playerMove = Convert.ToInt32(Console.ReadLine()); // TODO: repeat this if the move is not valid
+                game.MakeMove(playerMove);
+                if (game.Winner == Player.Player2)
+                {
+                    Console.WriteLine(game);
+                    Console.WriteLine("You won.");
+                    break;
+                }
+                else if (game.IsTerminalState)
+                {
+                    Console.WriteLine(game);
+                    Console.WriteLine("It's a tie.");
+                    break;
+                }
+            }
+        } 
 
         public static void Play(IGame game, IBrain brain, bool humanStarts = false)
         {
@@ -68,6 +105,6 @@ namespace GameAiLib
                     break; 
                 }
             } 
-        }
+        } 
     }
 }

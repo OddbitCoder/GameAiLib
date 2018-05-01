@@ -6,17 +6,14 @@ namespace GameAiLib
     public abstract class GenericMinimaxBrain : GenericBrain
     {
         private int maxDepth;
-        private ICache cache;
 
-        public GenericMinimaxBrain(int maxDepth = int.MaxValue, ICache cache = null)
+        public GenericMinimaxBrain(int maxDepth = int.MaxValue)
         {
             this.maxDepth = maxDepth;
-            this.cache = cache;
         }
 
         private double Minimax(IGame game, int depth, Player player, bool maximize)
         {
-            c++;
             if (depth == 0 || game.IsTerminalState)
             {
                 // 'maximize ? player : player.OtherPlayer()' is the same as 'player' that is passed to EvalGame
@@ -48,16 +45,8 @@ namespace GameAiLib
             }
         }
 
-        long c = 0;
-
         private double AlphaBeta(IGame game, int depth, double alpha, double beta, Player player, bool maximize)
         {
-            if (cache != null)
-            {
-                if (maximize && cache.GetBoundMax(game, out double boundMax, player)) { return boundMax; }
-                else if (!maximize && cache.GetBoundMin(game, out double boundMin, player)) { return boundMin; }
-            }
-            c++;
             if (depth == 0 || game.IsTerminalState)
             {
                 // 'maximize ? player : player.OtherPlayer()' is the same as 'player' that is passed to EvalGame
@@ -74,7 +63,6 @@ namespace GameAiLib
                     alpha = Math.Max(alpha, v);
                     if (beta <= alpha) { break; }
                 }
-                if (cache != null) { cache.PutBoundMax(game, v, player); }
                 return v;
             }
             else
@@ -88,21 +76,17 @@ namespace GameAiLib
                     beta = Math.Min(beta, v);
                     if (beta <= alpha) { break; }
                 }
-                if (cache != null) { cache.PutBoundMin(game, v, player); }
                 return v;
             }
         }
 
         protected override double EvalGame(IGame game, Player player)
         {
-            c = 0;
 #if SIMPLE_MINIMAX
-            double val = Minimax(game, maxDepth, player.OtherPlayer(), maximize: false);
+            return Minimax(game, maxDepth, player.OtherPlayer(), maximize: false);
 #else
-            double val = AlphaBeta(game, maxDepth, int.MinValue, int.MaxValue, player.OtherPlayer(), maximize: false);
+            return AlphaBeta(game, maxDepth, int.MinValue, int.MaxValue, player.OtherPlayer(), maximize: false);
 #endif
-            Console.WriteLine($"Num states={c}");
-            return val;
         }
 
         protected abstract double MinimaxEval(IGame game, Player player);
