@@ -63,10 +63,10 @@ namespace GameAiLib
             {
                 object undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
+                game.UndoMove(undoToken);
                 if (alpha >= beta) { break; }
                 bestValue = Math.Max(bestValue, v);
                 alpha = Math.Max(alpha, v);
-                game.UndoMove(undoToken);
             }
             return bestValue;
         }
@@ -79,13 +79,13 @@ namespace GameAiLib
             //Initial call for Player B's root node
             //rootNegamaxValue := negamax(rootNode, depth, −1)
             //rootMinimaxValue := −rootNegamaxValue
-//#if SIMPLE_NEGAMAX
+#if SIMPLE_NEGAMAX
             double rootNegamaxValue = Negamax(game, maxDepth, color: game.CurrentPlayer == Player.Player1);
             return game.CurrentPlayer == Player.Player1 ? rootNegamaxValue : -rootNegamaxValue;
-//#else
-//            double rootNegamaxValue = NegamaxAlphaBeta(game, maxDepth, alpha: double.MinValue, beta: double.MaxValue, color: game.CurrentPlayer == Player.Player1);
-//            return game.CurrentPlayer == Player.Player1 ? rootNegamaxValue : -rootNegamaxValue;
-//#endif
+#else
+            double rootNegamaxValue = NegamaxAlphaBeta(game, maxDepth, alpha: double.MinValue, beta: double.MaxValue, color: game.CurrentPlayer == Player.Player1);
+            return game.CurrentPlayer == Player.Player1 ? rootNegamaxValue : -rootNegamaxValue;
+#endif
         }
 
         protected abstract double NegamaxEval(IGameNew game);

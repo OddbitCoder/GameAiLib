@@ -20,7 +20,7 @@ namespace GameAiLib
             //Console.WriteLine(p1w);
             //Console.WriteLine(p2w);
             //Console.WriteLine(t);
-            Game.PlayNew(new TicTacToeNew(Player.Player1), new SimpleNegamaxBrain());
+            Game.PlayNew(new TicTacToeNew(Player.Player2), new SimpleNegamaxBrain());
         }
     }
 }
