@@ -8,7 +8,7 @@ namespace GameAiLib
         private static Random rng 
             = new Random();
 
-        public void MakeMove(IGameNew game)
+        public int MakeMove(IGameNew game)
         {
             double bestScore = double.MinValue;
             var bestMoves = new List<int>();
@@ -16,12 +16,14 @@ namespace GameAiLib
             {
                 var undoToken = game.MakeMove(move);
                 double score = EvalGame(game);
-                Console.WriteLine($"{move}: {score}");
+                //Console.WriteLine($"{move}: {score}");
                 if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                 if (score == bestScore) { bestMoves.Add(move); }
                 game.UndoMove(undoToken);
             }
-            game.MakeMove(bestMoves[rng.Next(bestMoves.Count)]);
+            int bestMove = bestMoves[rng.Next(bestMoves.Count)];
+            game.MakeMove(bestMove);
+            return bestMove;
         }
 
         protected abstract double EvalGame(IGameNew game);

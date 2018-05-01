@@ -2,6 +2,6 @@
 {
     public interface IBrainNew
     {
-        void MakeMove(IGameNew game);
+        int MakeMove(IGameNew game);
     }
 }

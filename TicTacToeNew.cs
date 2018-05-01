@@ -10,7 +10,7 @@ namespace GameAiLib
             = new byte[3][];
         private Player? winner
             = null;
-        private int depth
+        private int moves
             = 0;
         private Player currentPlayer;
 
@@ -30,7 +30,7 @@ namespace GameAiLib
 
         private bool IsFull
         {
-            get { return depth == 9; }
+            get { return moves == 9; }
         }
 
         public bool IsTerminalState
@@ -40,7 +40,7 @@ namespace GameAiLib
 
         public IEnumerable<int> AvailableMoves()
         {
-            var moves = new int[9 - depth];
+            var moves = new int[9 - this.moves];
             int offset = 0;
             int i = 0;
             foreach (var row in board)
@@ -59,7 +59,7 @@ namespace GameAiLib
             int row = move / 3;
             int col = move % 3;
             board[row][col] = (byte)(currentPlayer == Player.Player1 ? 1 : 2);
-            depth++;
+            moves++;
             // check if this resulted in a win
             if ((board[row][0] == board[row][1] && board[row][1] == board[row][2]) ||
                 (board[0][col] == board[1][col] && board[1][col] == board[2][col]) ||
@@ -84,7 +84,7 @@ namespace GameAiLib
             int col = move % 3;
             board[row][col] = 0;
             winner = null;
-            depth--;
+            moves--;
             currentPlayer = currentPlayer.OtherPlayer();
         }
 

@@ -17,77 +17,77 @@ namespace GameAiLib
             public ulong mask;
         }
 
-        public class Cache : ICache
-        {
-            private const int nBitsPages
-                = 5;
-            private const int nBitsItems
-                = 26;
-            private ulong nItems;
-            private int nPages;
+        //public class Cache : ICache
+        //{
+        //    private const int nBitsPages
+        //        = 5;
+        //    private const int nBitsItems
+        //        = 26;
+        //    private ulong nItems;
+        //    private int nPages;
 
-            private struct CacheItem
-            {
-                public ulong key;
-                public sbyte val;
-            }
+        //    private struct CacheItem
+        //    {
+        //        public ulong key;
+        //        public sbyte val;
+        //    }
 
-            private CacheItem[][] items;
+        //    private CacheItem[][] items;
 
-            public Cache()
-            {
-                nPages = 1 << nBitsPages;
-                nItems = 1ul << nBitsItems;
-                items = new CacheItem[nPages][];
-                for (int i = 0; i < nPages; i++)
-                {
-                    items[i] = new CacheItem[nItems];
-                    //for (ulong j = 0; j < nItems; j++)
-                    //{
-                    //    items[i][j] = new CacheItem();
-                    //}
-                }
-            }
+        //    public Cache()
+        //    {
+        //        nPages = 1 << nBitsPages;
+        //        nItems = 1ul << nBitsItems;
+        //        items = new CacheItem[nPages][];
+        //        for (int i = 0; i < nPages; i++)
+        //        {
+        //            items[i] = new CacheItem[nItems];
+        //            //for (ulong j = 0; j < nItems; j++)
+        //            //{
+        //            //    items[i][j] = new CacheItem();
+        //            //}
+        //        }
+        //    }
 
-            public bool GetBoundMax(IGame game, out double val, Player player)
-            {
-                ulong boardKey = ((Connect4)game).BoardKey(player);
-                ulong itemIdx = boardKey << (64 - nBitsItems) >> (64 - nBitsItems);
-                ulong pageIdx = boardKey << (64 - nBitsItems - nBitsPages) >> (64 - nBitsPages);
-                val = items[pageIdx][itemIdx].val;
-                return items[pageIdx][itemIdx].key == boardKey;
-            }
+        //    public bool GetBoundMax(IGame game, out double val, Player player)
+        //    {
+        //        ulong boardKey = ((Connect4)game).BoardKey(player);
+        //        ulong itemIdx = boardKey << (64 - nBitsItems) >> (64 - nBitsItems);
+        //        ulong pageIdx = boardKey << (64 - nBitsItems - nBitsPages) >> (64 - nBitsPages);
+        //        val = items[pageIdx][itemIdx].val;
+        //        return items[pageIdx][itemIdx].key == boardKey;
+        //    }
 
-            public bool GetBoundMin(IGame game, out double val, Player player)
-            {
-                val = 0;
-                return false;
-            }
+        //    public bool GetBoundMin(IGame game, out double val, Player player)
+        //    {
+        //        val = 0;
+        //        return false;
+        //    }
 
-            public void PutBoundMax(IGame game, double val, Player player)
-            {
-                ulong boardKey = ((Connect4)game).BoardKey(player);
-                ulong itemIdx = boardKey << (64 - nBitsItems) >> (64 - nBitsItems);
-                ulong pageIdx = boardKey << (64 - nBitsItems - nBitsPages) >> (64 - nBitsPages);
-                items[pageIdx][itemIdx] = new CacheItem {
-                    val = (sbyte)val,
-                    key = boardKey
-                };
-            }
+        //    public void PutBoundMax(IGame game, double val, Player player)
+        //    {
+        //        ulong boardKey = ((Connect4)game).BoardKey(player);
+        //        ulong itemIdx = boardKey << (64 - nBitsItems) >> (64 - nBitsItems);
+        //        ulong pageIdx = boardKey << (64 - nBitsItems - nBitsPages) >> (64 - nBitsPages);
+        //        items[pageIdx][itemIdx] = new CacheItem {
+        //            val = (sbyte)val,
+        //            key = boardKey
+        //        };
+        //    }
 
-            public void PutBoundMin(IGame game, double val, Player player)
-            {
-                //ulong boardKey = ((Connect4)game).BoardKey();
-                //ulong itemIdx = boardKey << (64 - nBitsItems) >> (64 - nBitsItems);
-                //ulong pageIdx = boardKey << (64 - nBitsItems - nBitsPages) >> (64 - nBitsPages);
-                //var item = items[pageIdx][itemIdx];
-                //items[pageIdx][itemIdx] = new CacheItem {
-                //    val = val,
-                //    key = boardKey,
-                //    max = false
-                //};
-            }
-        }
+        //    public void PutBoundMin(IGame game, double val, Player player)
+        //    {
+        //        //ulong boardKey = ((Connect4)game).BoardKey();
+        //        //ulong itemIdx = boardKey << (64 - nBitsItems) >> (64 - nBitsItems);
+        //        //ulong pageIdx = boardKey << (64 - nBitsItems - nBitsPages) >> (64 - nBitsPages);
+        //        //var item = items[pageIdx][itemIdx];
+        //        //items[pageIdx][itemIdx] = new CacheItem {
+        //        //    val = val,
+        //        //    key = boardKey,
+        //        //    max = false
+        //        //};
+        //    }
+        //}
 
         public class MinimaxBrain : GenericMinimaxBrain
         {
@@ -164,8 +164,8 @@ namespace GameAiLib
             }
         }
 
-        private ulong position;
-        private ulong mask;
+        public ulong position;
+        public ulong mask;
         private int moves;
         private Player? winner;
 
@@ -257,12 +257,6 @@ namespace GameAiLib
                 }
             }
             return Math.Abs(countPlayer1 - countPlayer2) <= 1 && moves == countPlayer1 + countPlayer2;
-        }
-
-        public ulong BoardKey(Player player)
-        {
-            if (player == Player.Player2) { return (position ^ mask) + mask + bottomMask; }
-            return position + mask + bottomMask;
         }
 
         public override string ToString()

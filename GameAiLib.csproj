@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connect4New.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GenericBrainNew.cs" />
     <Compile Include="GenericBrain.cs" />
