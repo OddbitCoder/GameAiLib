@@ -6,19 +6,89 @@ namespace GameAiLib
 {
     public class Connect4 : IGame
     {
+        private const ulong bottomMask
+            = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
+        private const ulong boardMask
+            = bottomMask * ((1ul << 6) - 1);
+
         public struct UndoToken
         {
             public ulong position;
             public ulong mask;
         }
 
+        public class Cache : ICache
+        {
+            private const int nPages = 10;
+
+            private struct CacheItem
+            {
+                public ulong key;
+                public byte boundMin;
+                public byte boundMax;
+            }
+
+            private CacheItem[][] items;
+
+            public Cache()
+            {
+                items = new CacheItem[nPages][];
+                for (int i = 0; i < nPages; i++)
+                {
+                    items[i] = new CacheItem[100000000ul];
+                }
+            }
+
+            public bool GetBoundMax(IGame game, out double val)
+            {
+                ulong key = ((Connect4)game).BoardKey();
+                var itemArray = items[key % nPages];
+                var item = itemArray[(key / nPages) % 100000000ul];
+                val = item.boundMax;
+                //if (item.key == key) Console.WriteLine("CACHE HIT");
+                return item.key == key;
+            }
+
+            public bool GetBoundMin(IGame game, out double val)
+            {
+                ulong key = ((Connect4)game).BoardKey();
+                var itemArray = items[key % nPages];
+                var item = itemArray[(key / nPages) % 100000000ul];
+                val = item.boundMin;
+                //if (item.key == key) Console.WriteLine("CACHE HIT");
+                return item.key == key;
+            }
+
+            public void PutBoundMax(IGame game, double boundMax)
+            {
+                ulong key = ((Connect4)game).BoardKey();
+                ulong arrayIdx = key % nPages;
+                ulong idx = (key / nPages) % 100000000ul;
+                var item = items[arrayIdx][idx];
+                item.key = key;
+                item.boundMax = (byte)boundMax;
+                items[arrayIdx][idx] = item;
+            }
+
+            public void PutBoundMin(IGame game, double boundMin)
+            {
+                ulong key = ((Connect4)game).BoardKey();
+                ulong arrayIdx = key % nPages;
+                ulong idx = (key / nPages) % 100000000ul;
+                var item = items[arrayIdx][idx];
+                item.key = key;
+                item.boundMin = (byte)boundMin;
+                items[arrayIdx][idx] = item;
+            }
+        }
+
         public class MinimaxBrain : GenericMinimaxBrain
         {
-            public MinimaxBrain(int maxDepth = int.MaxValue) : base(maxDepth)
+            public MinimaxBrain(int maxDepth = int.MaxValue) : base(maxDepth, null)
             {
             }
 
-            protected override double MinimaxEval(IGame _game, Player player) 
+            protected override double MinimaxEval(IGame _game, Player player)
             {
                 var game = (Connect4)_game;
                 if (game.Winner == null)
@@ -37,18 +107,13 @@ namespace GameAiLib
                 }
             }
 
-            private int[] order 
+            private int[] order
                 = new[] { 5, 3, 1, 0, 2, 4, 6 };
 
-            protected override IEnumerable<int> OrderedMoves(IGame game, Player player) 
+            protected override IEnumerable<int> OrderedMoves(IGame game, Player player)
             {
                 return game.AvailableMoves(player).OrderBy(m => order[m]);
             }
-
-            private const ulong bottomMask
-                = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
-            private const ulong boardMask
-                = bottomMask * ((1ul << 6) - 1);
 
             private ulong ComputeWinningPositions(ulong position, ulong mask)
             {
@@ -185,6 +250,11 @@ namespace GameAiLib
                 }
             }
             return Math.Abs(countPlayer1 - countPlayer2) <= 1 && moves == countPlayer1 + countPlayer2;
+        }
+
+        public ulong BoardKey()
+        {
+            return position + mask + bottomMask;
         }
 
         public override string ToString()

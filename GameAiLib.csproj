@@ -61,10 +61,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cache.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GenericBrain.cs" />
     <Compile Include="IBrain.cs" />
+    <Compile Include="ICache.cs" />
     <Compile Include="IGame.cs" />
     <Compile Include="GenericMinimaxBrain.cs" />
     <Compile Include="Player.cs" />
