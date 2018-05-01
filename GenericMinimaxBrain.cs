@@ -54,8 +54,8 @@ namespace GameAiLib
         {
             if (cache != null)
             {
-                if (maximize && cache.GetBoundMax(game, out double boundMax)) { return boundMax; }
-                else if (!maximize && cache.GetBoundMin(game, out double boundMin)) { return boundMin; }
+                if (maximize && cache.GetBoundMax(game, out double boundMax, player)) { return boundMax; }
+                else if (!maximize && cache.GetBoundMin(game, out double boundMin, player)) { return boundMin; }
             }
             c++;
             if (depth == 0 || game.IsTerminalState)
@@ -74,7 +74,7 @@ namespace GameAiLib
                     alpha = Math.Max(alpha, v);
                     if (beta <= alpha) { break; }
                 }
-                if (cache != null) { cache.PutBoundMax(game, v); }
+                if (cache != null) { cache.PutBoundMax(game, v, player); }
                 return v;
             }
             else
@@ -88,7 +88,7 @@ namespace GameAiLib
                     beta = Math.Min(beta, v);
                     if (beta <= alpha) { break; }
                 }
-                if (cache != null) { cache.PutBoundMin(game, v); }
+                if (cache != null) { cache.PutBoundMin(game, v, player); }
                 return v;
             }
         }
