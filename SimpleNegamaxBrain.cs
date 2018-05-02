@@ -4,9 +4,11 @@
     {
         protected override double NegamaxEval(IGameNew game)
         {
-            if (game.Winner == null) { return 0; }
-            else if (game.Winner == Player.Player1) { return 1; }
-            else { return -1; }
+            if (game.IsWinningState)
+            {
+                return game.Color ? 1 : -1;
+            }
+            return 0;
         }
     }
 }

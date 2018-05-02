@@ -29,12 +29,12 @@ namespace GameAiLib
                 if (player1Starts)
                 {
                     player1.MakeMove(game);
-                    if (game.Winner != null) { return Player.Player1; }
+                    if (game.IsWinningState) { return Player.Player1; }
                     if (game.IsTerminalState) { return null; }
                 }
                 player1Starts = true;
                 player2.MakeMove(game);
-                if (game.Winner != null) { return Player.Player2; }
+                if (game.IsWinningState) { return Player.Player2; }
                 if (game.IsTerminalState) { return null; }
             }
         }
@@ -45,32 +45,35 @@ namespace GameAiLib
             {
                 if (player1Starts)
                 {
+                    //game.MakeMove(player2.MakeMove(gameOld, Player.Player1));
                     gameOld.MakeMove(player1.MakeMove(game), Player.Player1);
-                    Debug.Assert(((Connect4)gameOld).position == ((Connect4New)game).position);
-                    Debug.Assert(((Connect4)gameOld).mask == ((Connect4New)game).mask);
-                    if (game.Winner != null) { return Player.Player1; }
+                    //Console.WriteLine(game);
+                    //Debug.Assert(((Connect4)gameOld).position == ((Connect4New)game).position);
+                    //Debug.Assert(((Connect4)gameOld).mask == ((Connect4New)game).mask);
+                    if (game.IsWinningState) { return Player.Player1; }
                     if (game.IsTerminalState) { return null; }
                 }
                 player1Starts = true;
-                //game.MakeMove(player2.MakeMove(gameOld, Player.Player2));
-                gameOld.MakeMove(player1.MakeMove(game), Player.Player2);
-                Debug.Assert(((Connect4)gameOld).position == (((Connect4New)game).position ^ ((Connect4New)game).mask));
-                Debug.Assert(((Connect4)gameOld).mask == ((Connect4New)game).mask);
-                if (game.Winner != null) { return Player.Player2; }
+                game.MakeMove(player2.MakeMove(gameOld, Player.Player2));
+                //gameOld.MakeMove(player1.MakeMove(game), Player.Player2);
+                //Console.WriteLine(gameOld);
+                //Console.ReadLine();
+                //Debug.Assert(((Connect4)gameOld).position == (((Connect4New)game).position ^ ((Connect4New)game).mask));
+                //Debug.Assert(((Connect4)gameOld).mask == ((Connect4New)game).mask);
+                if (game.IsWinningState) { return Player.Player2; }
                 if (game.IsTerminalState) { return null; }
             }
         }
 
-        public static void PlayNew(IGameNew game, IBrainNew brain)
+        public static void PlayNew(IGameNew game, IBrainNew brain, bool skipPlayer1)
         {
-            bool skipPlayer1 = game.CurrentPlayer != Player.Player1;
             while (true)
             {
                 if (!skipPlayer1)
                 {
                     brain.MakeMove(game);
                     Console.WriteLine(game);
-                    if (game.Winner == Player.Player1)
+                    if (game.IsWinningState)
                     {
                         Console.WriteLine("I won.");
                         break;
@@ -89,7 +92,7 @@ namespace GameAiLib
                 Console.Write("Your move? ");
                 int playerMove = Convert.ToInt32(Console.ReadLine()); // TODO: repeat this if the move is not valid
                 game.MakeMove(playerMove);
-                if (game.Winner == Player.Player2)
+                if (game.IsWinningState)
                 {
                     Console.WriteLine(game);
                     Console.WriteLine("You won.");

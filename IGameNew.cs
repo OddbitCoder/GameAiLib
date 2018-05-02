@@ -5,10 +5,10 @@ namespace GameAiLib
     public interface IGameNew
     {
         bool IsTerminalState { get; }
-        IEnumerable<int> AvailableMoves();
+        bool IsWinningState { get; }
+        IEnumerable<int> AvailableMoves { get; }
         object MakeMove(int move);
         void UndoMove(object undoToken);
-        Player? Winner { get; }
-        Player CurrentPlayer { get; }
+        bool Color { get; }
     }
 }

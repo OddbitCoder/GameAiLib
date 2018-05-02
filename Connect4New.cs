@@ -10,6 +10,7 @@ namespace GameAiLib
         {
             public ulong position;
             public ulong mask;
+            public bool color;
         }
 
         public class NegamaxBrain : GenericNegamaxBrain
@@ -24,25 +25,17 @@ namespace GameAiLib
             protected override double NegamaxEval(IGameNew _game)
             {
                 var game = (Connect4New)_game;
-                if (game.Winner == null)
+                if (game.IsWinningState)
                 {
-                    int scoreP1 = PopCount(ComputeWinningPositions(game.position, game.mask));
-                    int scoreP2 = PopCount(ComputeWinningPositions(game.position ^ game.mask, game.mask));
-                    return game.currentPlayer == Player.Player2 ? scoreP1 - scoreP2 : scoreP2 - scoreP1;
+                    bool player1Wins = !game.color;
+                    return (player1Wins ? 1 : -1) * 6 * 7;
                 }
-                if (game.Winner == Player.Player1)
-                {
-                    return 6 * 7;
-                }
-                else
-                {
-                    return -6 * 7;
-                }
+                return 0;
             }
 
             protected override IEnumerable<int> OrderedMoves(IGameNew game)
             {
-                return game.AvailableMoves().OrderBy(m => order[m]);
+                return game.AvailableMoves.OrderBy(m => order[m]);
             }
 
             private ulong ComputeWinningPositions(ulong position, ulong mask)
@@ -95,22 +88,18 @@ namespace GameAiLib
         public ulong position;
         public ulong mask;
         private int moves;
-        private Player? winner;
-        private Player currentPlayer;
+        private bool color
+            = true;
+        private bool winningState
+            = false;
 
-        public Connect4New(Player startingPlayer = Player.Player1)
+        public Connect4New()
         {
-            currentPlayer = startingPlayer;
         }
 
-        public Player? Winner
+        public bool IsWinningState
         {
-            get { return winner; }
-        }
-
-        public Player CurrentPlayer
-        {
-            get { return currentPlayer; }
+            get { return winningState; }
         }
 
         private bool IsFull
@@ -118,47 +107,56 @@ namespace GameAiLib
             get { return moves == 6 * 7; }
         }
 
-        public bool IsTerminalState
+        public bool Color
         {
-            get { return winner != null || IsFull; }
+            get { return color; }
         }
 
-        public IEnumerable<int> AvailableMoves()
+        public bool IsTerminalState
         {
-            var list = new List<int>(7);
-            for (int col = 0; col < 7; col++)
+            get { return IsWinningState || IsFull; }
+        }
+
+        public IEnumerable<int> AvailableMoves
+        {
+            get
             {
-                if (((1ul << 5 << (col * 7)) & mask) == 0)
+                var list = new List<int>(7);
+                for (int col = 0; col < 7; col++)
                 {
-                    list.Add(col);
+                    if (((1ul << 5 << (col * 7)) & mask) == 0)
+                    {
+                        list.Add(col);
+                    }
                 }
+                return list;
             }
-            return list;
         }
 
         public object MakeMove(int move)
         {
             var undoToken = new UndoToken {
                 position = position,
-                mask = mask
+                mask = mask,
+                color = color
             };
             mask |= mask + (1ul << (move * 7));
             position ^= mask;
             moves++;
+            color = !color;
             // check if this resulted in a win
             // horizontal
             ulong m = position & (position >> 7);
-            if ((m & (m >> 14)) != 0) { winner = currentPlayer; }
+            if ((m & (m >> 14)) != 0) { winningState = true; }
             // diag 1
             m = position & (position >> 6);
-            if ((m & (m >> 12)) != 0) { winner = currentPlayer; }
+            if ((m & (m >> 12)) != 0) { winningState = true; }
             // diag 2
             m = position & (position >> 8);
-            if ((m & (m >> 16)) != 0) { winner = currentPlayer; }
+            if ((m & (m >> 16)) != 0) { winningState = true; }
             // vertical
             m = position & (position >> 1);
-            if ((m & (m >> 2)) != 0) { winner = currentPlayer; }
-            currentPlayer = currentPlayer.OtherPlayer();
+            if ((m & (m >> 2)) != 0) { winningState = true; }
             return undoToken;
         }
 
@@ -167,13 +165,15 @@ namespace GameAiLib
             var undoToken = (UndoToken)_undoToken;
             position = undoToken.position;
             mask = undoToken.mask;
-            winner = null;
+            color = undoToken.color;
+            winningState = false;
             moves--;
-            currentPlayer = currentPlayer.OtherPlayer();
         }
 
         public override string ToString()
         {
+            // WARNME: this does not work correctly (swaps o and x every round)
+            Console.WriteLine($"Last move: {(color ? 'o' : 'x')}");
             var posPlayer1 = Convert.ToString((long)position, 2).PadLeft(49, '0');
             var posPlayer2 = Convert.ToString((long)(position ^ mask), 2).PadLeft(49, '0');
             var board = new char[49, 49];

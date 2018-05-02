@@ -8,24 +8,24 @@ namespace GameAiLib
     {
         private byte[][] board
             = new byte[3][];
-        private Player? winner
-            = null;
+        private bool winningState
+            = false;
         private int moves
             = 0;
-        private Player currentPlayer;
+        private bool color
+            = true;
 
-        public TicTacToeNew(Player startingPlayer = Player.Player1)
+        public TicTacToeNew()
         {
             for (int row = 0; row < 3; row++)
             {
                 board[row] = new byte[3];
             }
-            currentPlayer = startingPlayer;
         }
 
-        public Player? Winner
+        public bool Color
         {
-            get { return winner; }
+            get { return color; }
         }
 
         private bool IsFull
@@ -35,30 +35,38 @@ namespace GameAiLib
 
         public bool IsTerminalState
         {
-            get { return winner != null || IsFull; }
+            get { return winningState || IsFull; }
         }
 
-        public IEnumerable<int> AvailableMoves()
+        public bool IsWinningState
         {
-            var moves = new int[9 - this.moves];
-            int offset = 0;
-            int i = 0;
-            foreach (var row in board)
+            get { return winningState; }
+        }
+
+        public IEnumerable<int> AvailableMoves
+        {
+            get
             {
-                for (int col = 0; col < 3; col++)
+                var moves = new int[9 - this.moves];
+                int offset = 0;
+                int i = 0;
+                foreach (var row in board)
                 {
-                    if (row[col] == 0) { moves[i++] = offset + col; }
+                    for (int col = 0; col < 3; col++)
+                    {
+                        if (row[col] == 0) { moves[i++] = offset + col; }
+                    }
+                    offset += 3;
                 }
-                offset += 3;
+                return moves;
             }
-            return moves;
         }
 
         public object MakeMove(int move)
         {
             int row = move / 3;
             int col = move % 3;
-            board[row][col] = (byte)(currentPlayer == Player.Player1 ? 1 : 2);
+            board[row][col] = (byte)(color ? 1 : 2);
             moves++;
             // check if this resulted in a win
             if ((board[row][0] == board[row][1] && board[row][1] == board[row][2]) ||
@@ -66,26 +74,21 @@ namespace GameAiLib
                 (row == col && board[0][0] == board[1][1] && board[1][1] == board[2][2]) ||
                 (row + col == 2 && board[0][2] == board[1][1] && board[1][1] == board[2][0]))
             {
-                winner = currentPlayer;
+                winningState = true;
             }
-            currentPlayer = currentPlayer.OtherPlayer();
-            return move;
+            color = !color;
+            return new { move, color = !color };
         }
 
-        public Player CurrentPlayer
+        public void UndoMove(object _undoToken)
         {
-            get { return currentPlayer; }
-        }
-
-        public void UndoMove(object undoToken)
-        {
-            int move = (int)undoToken;
-            int row = move / 3;
-            int col = move % 3;
+            var undoToken = (dynamic)_undoToken;
+            int row = undoToken.move / 3;
+            int col = undoToken.move % 3;
             board[row][col] = 0;
-            winner = null;
+            color = undoToken.color;
+            winningState = false;
             moves--;
-            currentPlayer = currentPlayer.OtherPlayer();
         }
 
         public override string ToString()
@@ -96,6 +99,16 @@ namespace GameAiLib
             foreach (var row in board)
             {
                 str += row.Select(x => x == 0 ? "·" : (x == 1 ? "o" : "x")).Aggregate((x, y) => x + y) + " " + moves[i++] + Environment.NewLine;
+            }
+            return str.TrimEnd();
+        }
+
+        public string ToCode()
+        {
+            var str = "";
+            foreach (var row in board)
+            {
+                str += row.Select(x => x == 0 ? "·" : (x == 1 ? "o" : "x")).Aggregate((x, y) => x + y) + " ";
             }
             return str.TrimEnd();
         }

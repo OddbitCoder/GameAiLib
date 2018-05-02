@@ -21,22 +21,6 @@ namespace GameAiLib
 //07         bestValue := max(bestValue, v)
 //08     return bestValue
 
-        private double Negamax(IGameNew game, int depth, bool color)
-        {
-            if (depth == 0 || game.IsTerminalState)
-            {
-                return (color ? 1 : -1) * NegamaxEval(game);
-            }
-            double bestValue = double.MinValue;
-            foreach (int move in OrderedMoves(game))
-            {
-                object undoToken = game.MakeMove(move);
-                double v = -Negamax(game, depth - 1, !color);
-                game.UndoMove(undoToken);
-                bestValue = Math.Max(bestValue, v);
-            }
-            return bestValue;
-        }
 
 //01 function negamax(node, depth, α, β, color)
 //02     if depth = 0 or node is a terminal node
@@ -154,19 +138,37 @@ namespace GameAiLib
             //Initial call for Player B's root node
             //rootNegamaxValue := negamax(rootNode, depth, −1)
             //rootMinimaxValue := −rootNegamaxValue
-#if SIMPLE_NEGAMAX
-            double rootNegamaxValue = Negamax(game, maxDepth, color: game.CurrentPlayer == Player.Player1);
-#else
-            double rootNegamaxValue = NegamaxAlphaBeta(game, maxDepth, alpha: double.MinValue, beta: double.MaxValue, color: game.CurrentPlayer == Player.Player1);
-#endif
-            return game.CurrentPlayer == Player.Player1 ? rootNegamaxValue : -rootNegamaxValue;
+            //return Negamax(game, 0, !game.Color);
+
+            return Negamax(game, maxDepth, game.Color);
+        }
+
+        private double Negamax(IGameNew game, int depth, bool color)
+        {
+            if (depth == 0 || game.IsTerminalState)
+            {
+                var score = (color ? 1 : -1) * NegamaxEval(game); 
+                Console.WriteLine(game);
+                Console.WriteLine($"{(color ? 'x' : 'o')} = {score}");
+                Console.WriteLine();
+                return score;
+            }
+            double bestValue = double.MinValue;
+            foreach (int move in OrderedMoves(game))
+            {
+                object undoToken = game.MakeMove(move);
+                double v = -Negamax(game, depth - 1, !color);
+                game.UndoMove(undoToken);
+                bestValue = Math.Max(bestValue, v);
+            }
+            return bestValue;
         }
 
         protected abstract double NegamaxEval(IGameNew game);
 
         protected virtual IEnumerable<int> OrderedMoves(IGameNew game)
         {
-            return game.AvailableMoves();
+            return game.AvailableMoves;
         }
     }
 }
