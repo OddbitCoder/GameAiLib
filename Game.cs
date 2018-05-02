@@ -22,6 +22,23 @@ namespace GameAiLib
             }
         }
 
+        public static Player? Play(IGameNew game, IBrainNew player1, IBrainNew player2, bool player1Starts = true)
+        {
+            while (true)
+            {
+                if (player1Starts)
+                {
+                    player1.MakeMove(game);
+                    if (game.Winner != null) { return Player.Player1; }
+                    if (game.IsTerminalState) { return null; }
+                }
+                player1Starts = true;
+                player2.MakeMove(game);
+                if (game.Winner != null) { return Player.Player2; }
+                if (game.IsTerminalState) { return null; }
+            }
+        }
+
         public static Player? Play(IGameNew game, IGame gameOld, IBrainNew player1, IBrain player2, bool player1Starts = true)
         {
             while (true)
@@ -35,7 +52,8 @@ namespace GameAiLib
                     if (game.IsTerminalState) { return null; }
                 }
                 player1Starts = true;
-                game.MakeMove(player2.MakeMove(gameOld, Player.Player2));
+                //game.MakeMove(player2.MakeMove(gameOld, Player.Player2));
+                gameOld.MakeMove(player1.MakeMove(game), Player.Player2);
                 Debug.Assert(((Connect4)gameOld).position == (((Connect4New)game).position ^ ((Connect4New)game).mask));
                 Debug.Assert(((Connect4)gameOld).mask == ((Connect4New)game).mask);
                 if (game.Winner != null) { return Player.Player2; }

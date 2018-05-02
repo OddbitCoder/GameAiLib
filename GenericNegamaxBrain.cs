@@ -64,75 +64,87 @@ namespace GameAiLib
                 object undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
                 game.UndoMove(undoToken);
-                if (alpha >= beta) { break; }
                 bestValue = Math.Max(bestValue, v);
                 alpha = Math.Max(alpha, v);
+                if (alpha >= beta) { break; }
             }
             return bestValue;
         }
 
-    //function negamax(node, depth, α, β, color)
-    //alphaOrig := α
+        //function negamax(node, depth, α, β, color)
+        //alphaOrig := α
 
-    //// Transposition Table Lookup; node is the lookup key for ttEntry
-    //ttEntry := TranspositionTableLookup(node)
-    //if ttEntry is valid and ttEntry.depth ≥ depth
-    //    if ttEntry.Flag = EXACT
-    //        return ttEntry.Value
-    //    else if ttEntry.Flag = LOWERBOUND
-    //        α := max(α, ttEntry.Value)
-    //    else if ttEntry.Flag = UPPERBOUND
-    //        β := min(β, ttEntry.Value)
-    //    endif
-    //    if α ≥ β
-    //        return ttEntry.Value
-    //endif
+        //// Transposition Table Lookup; node is the lookup key for ttEntry
+        //ttEntry := TranspositionTableLookup(node)
+        //if ttEntry is valid and ttEntry.depth ≥ depth
+        //    if ttEntry.Flag = EXACT
+        //        return ttEntry.Value
+        //    else if ttEntry.Flag = LOWERBOUND
+        //        α := max(α, ttEntry.Value)
+        //    else if ttEntry.Flag = UPPERBOUND
+        //        β := min(β, ttEntry.Value)
+        //    endif
+        //    if α ≥ β
+        //        return ttEntry.Value
+        //endif
 
-    //if depth = 0 or node is a terminal node
-    //    return color * the heuristic value of node
+        //if depth = 0 or node is a terminal node
+        //    return color * the heuristic value of node
 
-    //bestValue := -∞
-    //childNodes := GenerateMoves(node)
-    //childNodes := OrderMoves(childNodes)
-    //foreach child in childNodes
-    //    v := -negamax(child, depth - 1, -β, -α, -color)
-    //    bestValue := max(bestValue, v)
-    //    α := max(α, v)
-    //    if α ≥ β
-    //        break
+        //bestValue := -∞
+        //childNodes := GenerateMoves(node)
+        //childNodes := OrderMoves(childNodes)
+        //foreach child in childNodes
+        //    v := -negamax(child, depth - 1, -β, -α, -color)
+        //    bestValue := max(bestValue, v)
+        //    α := max(α, v)
+        //    if α ≥ β
+        //        break
 
-    //// Transposition Table Store; node is the lookup key for ttEntry
-    //ttEntry.Value := bestValue
-    //if bestValue ≤ alphaOrig
-    //    ttEntry.Flag := UPPERBOUND
-    //else if bestValue ≥ β
-    //    ttEntry.Flag := LOWERBOUND
-    //else
-    //    ttEntry.Flag := EXACT
-    //endif
-    //ttEntry.depth := depth
-    //TranspositionTableStore(node, ttEntry)
+        //// Transposition Table Store; node is the lookup key for ttEntry
+        //ttEntry.Value := bestValue
+        //if bestValue ≤ alphaOrig
+        //    ttEntry.Flag := UPPERBOUND
+        //else if bestValue ≥ β
+        //    ttEntry.Flag := LOWERBOUND
+        //else
+        //    ttEntry.Flag := EXACT
+        //endif
+        //ttEntry.depth := depth
+        //TranspositionTableStore(node, ttEntry)
 
-    //return bestValue
+        //return bestValue
 
-        //private double NegamaxAlphaBetaWithTable(IGameNew game, int depth, double alpha, double beta, bool color)
-        //{
-        //    if (depth == 0 || game.IsTerminalState)
-        //    {
-        //        return (color ? 1 : -1) * NegamaxEval(game);
-        //    }
-        //    double bestValue = double.MinValue;
-        //    foreach (int move in OrderedMoves(game))
-        //    {
-        //        object undoToken = game.MakeMove(move);
-        //        double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
-        //        game.UndoMove(undoToken);
-        //        if (alpha >= beta) { break; }
-        //        bestValue = Math.Max(bestValue, v);
-        //        alpha = Math.Max(alpha, v);
-        //    }
-        //    return bestValue;
-        //}
+        private double NegamaxAlphaBetaWithTable(IGameNew game, int depth, double alpha, double beta, bool color, ICacheNew cache) // TODO: check if correct
+        {
+            double alphaOrig = alpha;
+            if (cache.Lookup(game, out ICacheItem item) && item.Depth >= depth)
+            {
+                if (item.Flag == Flag.EXACT) { return item.Val; }
+                else if (item.Flag == Flag.LOWER) { alpha = Math.Max(alpha, item.Val); }
+                else if (item.Flag == Flag.UPPER) { beta = Math.Min(beta, item.Val); }
+                if (alpha >= beta) { return item.Val; }
+            }
+            if (depth == 0 || game.IsTerminalState)
+            {
+                return (color ? 1 : -1) * NegamaxEval(game);
+            }
+            double bestValue = double.MinValue;
+            foreach (int move in OrderedMoves(game))
+            {
+                object undoToken = game.MakeMove(move);
+                double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
+                game.UndoMove(undoToken);
+                bestValue = Math.Max(bestValue, v);
+                alpha = Math.Max(alpha, v);
+                if (alpha >= beta) { break; }
+            }
+            Flag flag = Flag.EXACT;
+            if (bestValue <= alphaOrig) { flag = Flag.UPPER; }
+            else if (bestValue >= beta) { flag = Flag.LOWER; }
+            cache.Put(game, depth, flag, bestValue);
+            return bestValue;
+        }
 
         protected override double EvalGame(IGameNew game)
         {

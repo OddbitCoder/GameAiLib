@@ -68,6 +68,7 @@
     <Compile Include="GenericNegamaxBrain.cs" />
     <Compile Include="IBrainNew.cs" />
     <Compile Include="IBrain.cs" />
+    <Compile Include="ICacheNew.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="IGameNew.cs" />
     <Compile Include="IGame.cs" />
