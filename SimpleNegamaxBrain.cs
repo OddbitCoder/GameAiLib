@@ -6,7 +6,8 @@
         {
             if (game.IsWinningState)
             {
-                return game.Color ? 1 : -1;
+                bool player1Wins = !game.Color;
+                return player1Wins ? 1 : -1;
             }
             return 0;
         }

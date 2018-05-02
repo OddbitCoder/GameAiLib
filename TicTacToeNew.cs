@@ -77,16 +77,16 @@ namespace GameAiLib
                 winningState = true;
             }
             color = !color;
-            return new { move, color = !color };
+            return move;
         }
 
-        public void UndoMove(object _undoToken)
+        public void UndoMove(object undoToken)
         {
-            var undoToken = (dynamic)_undoToken;
-            int row = undoToken.move / 3;
-            int col = undoToken.move % 3;
+            int move = (int)undoToken;
+            int row = move / 3;
+            int col = move % 3;
             board[row][col] = 0;
-            color = undoToken.color;
+            color = !color;
             winningState = false;
             moves--;
         }
@@ -103,7 +103,7 @@ namespace GameAiLib
             return str.TrimEnd();
         }
 
-        public string ToCode()
+        public string ToOneLineString()
         {
             var str = "";
             foreach (var row in board)

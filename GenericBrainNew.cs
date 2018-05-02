@@ -5,7 +5,7 @@ namespace GameAiLib
 {
     public abstract class GenericBrainNew : IBrainNew
     {
-        private static Random rng 
+        private static Random rndGen 
             = new Random();
 
         public int MakeMove(IGameNew game)
@@ -16,16 +16,16 @@ namespace GameAiLib
             {
                 var undoToken = game.MakeMove(move);
                 double score = EvalGame(game);
-                Console.WriteLine($"{move}: {score}");
                 if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                 if (score == bestScore) { bestMoves.Add(move); }
                 game.UndoMove(undoToken);
             }
-            int bestMove = bestMoves[rng.Next(bestMoves.Count)];
+            int bestMove = bestMoves[rndGen.Next(bestMoves.Count)];
             game.MakeMove(bestMove);
             return bestMove;
         }
 
-        protected abstract double EvalGame(IGameNew game);
+        // evaluates the player that made the last move
+        protected abstract double EvalGame(IGameNew game); 
     }
 }

@@ -9,6 +9,6 @@ namespace GameAiLib
         IEnumerable<int> AvailableMoves { get; }
         object MakeMove(int move);
         void UndoMove(object undoToken);
-        bool Color { get; }
+        bool Color { get; } // who will make the next move? (true = the player that started the game)
     }
 }
