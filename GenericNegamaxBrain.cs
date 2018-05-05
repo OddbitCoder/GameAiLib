@@ -22,7 +22,7 @@ namespace GameAiLib
             double bestValue = double.MinValue;
             foreach (int move in OrderedMoves(game))
             {
-                object undoToken = game.MakeMove(move);
+                var undoToken = game.MakeMove(move);
                 double v = -Negamax(game, depth - 1, !color);
                 game.UndoMove(undoToken);
                 bestValue = Math.Max(bestValue, v);
@@ -39,7 +39,7 @@ namespace GameAiLib
             double bestValue = double.MinValue;
             foreach (int move in OrderedMoves(game))
             {
-                object undoToken = game.MakeMove(move);
+                var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
                 game.UndoMove(undoToken);
                 bestValue = Math.Max(bestValue, v);
@@ -96,7 +96,7 @@ namespace GameAiLib
         private double NegamaxAlphaBetaWithTable(IGameNew game, int depth, double alpha, double beta, bool color, ICacheNew cache) // TODO: check if correct
         {
             double alphaOrig = alpha;
-            if (cache.Lookup(game, out ICacheItem item) && item.Depth >= depth)
+            if (cache != null && cache.Lookup(game, out ICacheItem item) && item.Depth >= depth)
             {
                 if (item.Flag == Flag.EXACT) { return item.Val; }
                 else if (item.Flag == Flag.LOWER) { alpha = Math.Max(alpha, item.Val); }
@@ -110,17 +110,20 @@ namespace GameAiLib
             double bestValue = double.MinValue;
             foreach (int move in OrderedMoves(game))
             {
-                object undoToken = game.MakeMove(move);
+                var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
                 game.UndoMove(undoToken);
                 bestValue = Math.Max(bestValue, v);
                 alpha = Math.Max(alpha, v);
                 if (alpha >= beta) { break; }
             }
-            Flag flag = Flag.EXACT;
-            if (bestValue <= alphaOrig) { flag = Flag.UPPER; }
-            else if (bestValue >= beta) { flag = Flag.LOWER; }
-            cache.Put(game, depth, flag, bestValue);
+            if (cache != null)
+            {
+                Flag flag = Flag.EXACT;
+                if (bestValue <= alphaOrig) { flag = Flag.UPPER; }
+                else if (bestValue >= beta) { flag = Flag.LOWER; }
+                cache.Put(game, depth, flag, bestValue);
+            }
             return bestValue;
         }
 

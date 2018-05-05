@@ -10,7 +10,6 @@ namespace GameAiLib
         {
             public ulong position;
             public ulong mask;
-            public bool color;
         }
 
         public class NegamaxBrain : GenericNegamaxBrain
@@ -30,7 +29,12 @@ namespace GameAiLib
                     bool player1Wins = !game.color;
                     return (player1Wins ? 1 : -1) * 6 * 7;
                 }
-                return 0;
+                else
+                {
+                    int scoreP1 = PopCount(ComputeWinningPositions(game.position, game.mask));
+                    int scoreP2 = PopCount(ComputeWinningPositions(game.position ^ game.mask, game.mask));
+                    return !game.color ? (scoreP1 - scoreP2) : (scoreP2 - scoreP1);
+                }
             }
 
             protected override IEnumerable<int> OrderedMoves(IGameNew game)
@@ -137,8 +141,7 @@ namespace GameAiLib
         {
             var undoToken = new UndoToken {
                 position = position,
-                mask = mask,
-                color = color
+                mask = mask
             };
             mask |= mask + (1ul << (move * 7));
             position ^= mask;
@@ -165,9 +168,9 @@ namespace GameAiLib
             var undoToken = (UndoToken)_undoToken;
             position = undoToken.position;
             mask = undoToken.mask;
-            color = undoToken.color;
             winningState = false;
             moves--;
+            color = !color;
         }
 
         public override string ToString()
