@@ -7,7 +7,7 @@ namespace GameAiLib
         public ulong nodeCode;
         public byte depth;
         public Flag flag;
-        public byte val;
+        public sbyte val;
         // interface
         public int Depth => depth;
         public Flag Flag => flag;
@@ -16,32 +16,37 @@ namespace GameAiLib
 
     public class Connect4Cache : ICache
     {
-        private Connect4CacheItem[] items;
-        private int nBitsKey;
+        public long cacheHits;
+        public long exactHits;
+        public long numLookups;
 
-        public Connect4Cache(int nBitsKey = 24)
+        private Connect4CacheItem[] items;
+
+        public Connect4Cache(ulong cacheSize = 8388593ul)
         {
-            items = new Connect4CacheItem[1ul << nBitsKey];
-            this.nBitsKey = nBitsKey;
+            items = new Connect4CacheItem[cacheSize];
         }
 
         public bool Lookup(IGameNew game, out ICacheItem item)
         {
+            numLookups++;
             ulong nodeCode = ((Connect4New)game).NodeCode();
-            ulong key = (nodeCode << (64 - nBitsKey)) >> (64 - nBitsKey);
+            ulong key = nodeCode % (ulong)items.Length;
             item = items[key];
-            return item != null && items[key].nodeCode == nodeCode;
+            bool hit = items[key].nodeCode == nodeCode;
+            if (hit) { cacheHits++; if (item.Flag == Flag.EXACT) { exactHits++; } }
+            return hit;
         }
 
         public void Put(IGameNew game, int depth, Flag flag, double val)
         {
             ulong nodeCode = ((Connect4New)game).NodeCode();
-            ulong key = (nodeCode << (64 - nBitsKey)) >> (64 - nBitsKey);
+            ulong key = nodeCode % (ulong)items.Length;
             items[key] = new Connect4CacheItem {
                 nodeCode = nodeCode,
                 depth = (byte)depth,
                 flag = flag,
-                val = (byte)val
+                val = (sbyte)val
             };
         }
     }

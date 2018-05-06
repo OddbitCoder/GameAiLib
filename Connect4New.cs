@@ -175,7 +175,7 @@ namespace GameAiLib
 
         public ulong NodeCode()
         {
-            return position + mask + bottomMask;
+            return position + mask; //+ bottomMask; (bottomMask is constant)
         }
 
         public override string ToString()
