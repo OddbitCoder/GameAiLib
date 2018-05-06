@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connect4Cache.cs" />
     <Compile Include="Connect4New.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GenericBrainNew.cs" />
@@ -68,7 +69,6 @@
     <Compile Include="GenericNegamaxBrain.cs" />
     <Compile Include="IBrainNew.cs" />
     <Compile Include="IBrain.cs" />
-    <Compile Include="ICacheNew.cs" />
     <Compile Include="ICache.cs" />
     <Compile Include="IGameNew.cs" />
     <Compile Include="IGame.cs" />

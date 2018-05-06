@@ -17,7 +17,7 @@ namespace GameAiLib
             private int[] order
                 = new[] { 5, 3, 1, 0, 2, 4, 6 };
 
-            public NegamaxBrain(int maxDepth = int.MaxValue) : base(maxDepth)
+            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null) : base(maxDepth, cache)
             {
             }
 
@@ -173,10 +173,14 @@ namespace GameAiLib
             color = !color;
         }
 
+        public ulong NodeCode()
+        {
+            return position + mask + bottomMask;
+        }
+
         public override string ToString()
         {
             // WARNME: this does not work correctly (swaps o and x every round)
-            Console.WriteLine($"Last move: {(color ? 'o' : 'x')}");
             var posPlayer1 = Convert.ToString((long)position, 2).PadLeft(49, '0');
             var posPlayer2 = Convert.ToString((long)(position ^ mask), 2).PadLeft(49, '0');
             var board = new char[49, 49];

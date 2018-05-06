@@ -67,25 +67,27 @@ namespace GameAiLib
 
         static void Main(string[] args)
         {
-            bool player1Starts = true;
-            int p1w = 0, p2w = 0, t = 0;
-            for (var i = 0; i < 3000; i++)
-            {
-                Console.Write(".");
-                var winner =
-                    //Game.Play(new Connect4(), new Connect4.MinimaxBrain(1), new Connect4.MinimaxBrain(1), player1Starts);
-                    Game.Play(new Connect4New(), new Connect4(), new Connect4New.NegamaxBrain(1), new Connect4.MinimaxBrain(1), player1Starts);
-                    //Game.Play(new Connect4New(), new Connect4New.NegamaxBrain(1), new Connect4New.NegamaxBrain(1), player1Starts);
-                if (winner == Player.Player1) { p1w++; }
-                else if (winner == Player.Player2) { p2w++; }
-                else { t++; }
-                player1Starts = !player1Starts;
-            }
-            Console.WriteLine(p1w);
-            Console.WriteLine(p2w);
-            Console.WriteLine(t);
+            var cache = new Connect4Cache(nBitsKey: 20);
+            //bool player1Starts = true;
+            //int p1w = 0, p2w = 0, t = 0;
+
+            //for (var i = 0; i < 3; i++)
+            //{
+            //    Console.Write(".");
+            //    var winner =
+            //       // Game.Play(new Connect4(), new Connect4.MinimaxBrain(12), new Connect4.MinimaxBrain(10), player1Starts);
+            //        //Game.Play(new Connect4New(), new Connect4(), new Connect4New.NegamaxBrain(3, cache), new Connect4.MinimaxBrain(3), player1Starts);
+            //        Game.Play(new Connect4New(), new Connect4New.NegamaxBrain(12,cache), new Connect4New.NegamaxBrain(3), player1Starts);
+            //    if (winner == Player.Player1) { p1w++; }
+            //    else if (winner == Player.Player2) { p2w++; }
+            //    else { t++; }
+            //    player1Starts = !player1Starts;
+            //}
+            //Console.WriteLine(p1w);
+            //Console.WriteLine(p2w);
+            //Console.WriteLine(t);
             //Game.Play(new Connect4(), new Connect4.MinimaxBrain(maxDepth: 10));
-            //Game.PlayNew(new TicTacToeNew(), new SimpleNegamaxBrain(), skipPlayer1: true);
+            Game.PlayNew(new Connect4New(), new Connect4New.NegamaxBrain(15, cache), skipPlayer1: true);
 
 
 

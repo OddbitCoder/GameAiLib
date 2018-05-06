@@ -1,12 +1,22 @@
-﻿using System;
-
-namespace GameAiLib
+﻿namespace GameAiLib
 {
+    public enum Flag : byte
+    {
+        EXACT,
+        UPPER,
+        LOWER
+    }
+
+    public interface ICacheItem
+    {
+        int Depth { get; }
+        Flag Flag { get; }
+        double Val { get; }
+    }
+
     public interface ICache
     {
-        bool GetBoundMin(IGame game, out double val, Player player);
-        bool GetBoundMax(IGame game, out double val, Player player);
-        void PutBoundMin(IGame game, double boundMin, Player player);
-        void PutBoundMax(IGame game, double boundMax, Player player);
+        bool Lookup(IGameNew game, out ICacheItem item);
+        void Put(IGameNew game, int depth, Flag flag, double val);
     }
 }
