@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace GameAiLib
+﻿namespace GameAiLib
 {
     public struct Connect4CacheItem : ICacheItem
     {

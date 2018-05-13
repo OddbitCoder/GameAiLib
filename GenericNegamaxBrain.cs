@@ -8,7 +8,7 @@ namespace GameAiLib
         private int maxDepth;
         private ICache cache;
 
-        public GenericNegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null)
+        public GenericNegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) : base(moveCache)
         {
             this.maxDepth = maxDepth;
             this.cache = cache;

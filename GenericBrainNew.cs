@@ -8,6 +8,13 @@ namespace GameAiLib
         private static Random rndGen 
             = new Random();
 
+        private IMoveCache moveCache;
+
+        public GenericBrainNew(IMoveCache moveCache = null)
+        {
+            this.moveCache = moveCache;
+        }
+
         public int MakeMove(IGameNew game)
         {
             double bestScore = double.MinValue;
@@ -16,7 +23,6 @@ namespace GameAiLib
             {
                 var undoToken = game.MakeMove(move);
                 double score = EvalGame(game);
-                //Console.WriteLine($"{move} {score}");
                 if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
                 if (score == bestScore) { bestMoves.Add(move); }
                 game.UndoMove(undoToken);

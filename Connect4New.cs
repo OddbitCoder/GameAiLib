@@ -17,7 +17,7 @@ namespace GameAiLib
             private int[] order
                 = new[] { 5, 3, 1, 0, 2, 4, 6 };
 
-            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null) : base(maxDepth, cache)
+            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) : base(maxDepth, cache, moveCache)
             {
             }
 
