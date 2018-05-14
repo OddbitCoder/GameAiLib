@@ -77,30 +77,30 @@ namespace GameAiLib
         {
             var cache = new Connect4Cache();
             var moveCache = new Connect4MoveCache(@"C:\Work\GameAiLib\data\starting.ojpl");
-            bool player1Starts = true;
-            int p1w = 0, p2w = 0, t = 0;
-            var time = DateTime.Now;
-            for (var i = 0; i < 1000; i++)
-            {
-                Console.Write(".");
-                var winner =
-                    //Game.Play(new Connect4(), new Connect4.MinimaxBrain(5), new Connect4.MinimaxBrain(0), player1Starts);
-                    Game.Play(new Connect4New(), new Connect4(), new Connect4New.NegamaxBrain(3), new Connect4.MinimaxBrain(3), player1Starts);
-                    //Game.Play(new Connect4New(), new Connect4New.NegamaxBrain(3), new Connect4New.NegamaxBrain(3), player1Starts);
-                if (winner == Player.Player1) { p1w++; }
-                else if (winner == Player.Player2) { p2w++; }
-                else { t++; }
-                player1Starts = !player1Starts;
-            }
-            Console.WriteLine($"Time: {(DateTime.Now - time).TotalSeconds}");
-            Console.WriteLine(p1w);
-            Console.WriteLine(p2w);
-            Console.WriteLine(t);
+            //bool player1Starts = true;
+            //int p1w = 0, p2w = 0, t = 0;
+            //var time = DateTime.Now;
+            //for (var i = 0; i < 100; i++)
+            //{
+            //    Console.Write(".");
+            //    var winner =
+            //        //Game.Play(new Connect4(), new Connect4.MinimaxBrain(5), new Connect4.MinimaxBrain(0), player1Starts);
+            //        //Game.Play(new Connect4New(), new Connect4(), new Connect4New.NegamaxBrain(15, moveCache: moveCache), new Connect4.MinimaxBrain(15), player1Starts);
+            //        Game.Play(new Connect4New(), new Connect4New.NegamaxBrain(10, cache, moveCache), new Connect4New.NegamaxBrain(10, cache, moveCache), player1Starts);
+            //    if (winner == Player.Player1) { p1w++; }
+            //    else if (winner == Player.Player2) { p2w++; }
+            //    else { t++; }
+            //    player1Starts = !player1Starts;
+            //}
+            //Console.WriteLine($"Time: {(DateTime.Now - time).TotalSeconds}");
+            //Console.WriteLine(p1w);
+            //Console.WriteLine(p2w);
+            //Console.WriteLine(t);
             //Console.WriteLine($"Lookups: {cache.numLookups}");
             //Console.WriteLine($"Cache hits: {cache.cacheHits}");
             //Console.WriteLine($"Exact hits: {cache.exactHits}");
-            ////Game.Play(new Connect4(), new Connect4.MinimaxBrain(maxDepth: 10));
-            ////Game.PlayNew(new Connect4New(), new Connect4New.NegamaxBrain(15, cache), skipPlayer1: true);
+            //Game.Play(new Connect4(), new Connect4.MinimaxBrain(maxDepth: 10));
+            Game.PlayNew(new Connect4New(), new Connect4New.NegamaxBrain(15, cache, moveCache), skipPlayer1: true);
 
 
 

@@ -14,35 +14,34 @@ namespace GameAiLib
         {
             get
             {
-                var moves = new List<int>(7);
-                //for (int i = 0; i < 7; i++)
-                //{
-
-                //}
-                return moves;
+                var listOfMoves = new List<int>(7);
+                for (int move = 1; move <= 7; move++)
+                {
+                    if ((moves & (1 << (move - 1))) != 0)
+                    {
+                        listOfMoves.Add(move - 1);
+                    }
+                }
+                return listOfMoves;
             }
         }
     }
 
     public class Connect4MoveCache : IMoveCache
     {
-        private static int MAX_DEPTH
-            = 5;
-        private static int KEY_SIZE_BITS
-            = 3 * MAX_DEPTH;
-
         private Connect4MoveCacheItem[] items;
 
-        public Connect4MoveCache(string fileName)
+        public Connect4MoveCache(string fileName, bool winOrTie = false, int maxDepth = 5)
         {
-            items = new Connect4MoveCacheItem[1 << KEY_SIZE_BITS];
-            var data = File.ReadAllLines(fileName);
             const string regex = @"""pos"":""(.*?)"",""score"":\[(.*?)\]";
+            int keySize = 3 * maxDepth; // in bits
+            items = new Connect4MoveCacheItem[1 << keySize];
+            var data = File.ReadAllLines(fileName);
             foreach (var line in data)
             {
                 var match = Regex.Match(line, regex);
                 var key = match.Groups[1].Value;
-                if (key.Length > MAX_DEPTH) { continue; }
+                if (key.Length > maxDepth) { continue; }
                 ulong code = 0;
                 foreach (int move in key.Select(x => Convert.ToInt32(x.ToString())))
                 {
@@ -50,15 +49,24 @@ namespace GameAiLib
                 }
                 //Console.WriteLine($"{key} {code}");
                 byte goodMoves = 0;
-                int pos = 0;
-                foreach (int score in match.Groups[2].Value.Split(',').Select(x => Convert.ToInt32(x)))
+                var scores = match.Groups[2].Value.Split(',')
+                    .Select(x => Convert.ToInt32(x))
+                    .Select((score, pos) => new { score, pos })
+                    .ToArray();
+                int maxScore = scores.Max(item => item.score);
+                if (maxScore > 0)
                 {
-                    //Console.WriteLine($"{pos} {score}");
-                    if (score >= 0) // WARNME: win or tie (TODO: win-only option)
+                    foreach (var item in scores.Where(item => (!winOrTie && item.score > 0) || (winOrTie && item.score >= 0))) 
                     {
-                        goodMoves += (byte)(1 << pos);
+                        goodMoves += (byte)(1 << item.pos);
                     }
-                    pos++;
+                }
+                else
+                {
+                    foreach (var item in scores.Where(item => item.score == maxScore))
+                    {
+                        goodMoves += (byte)(1 << item.pos);
+                    }
                 }
                 //Console.WriteLine(goodMoves);
                 //Console.WriteLine();
@@ -68,9 +76,17 @@ namespace GameAiLib
             };
         }
 
-        public bool Lookup(IGameNew game, out IMoveCacheItem item)
+        public bool Lookup(IGameNew _game, out IMoveCacheItem _item)
         {
-            item = null;
+            var game = (Connect4New)_game;
+            ulong code = game.MovesCode();
+            if (code < (ulong)items.Length)
+            {
+                var item = items[code];
+                _item = item;
+                return item.moves != 0;
+            }
+            _item = null;
             return false;
         }
     }

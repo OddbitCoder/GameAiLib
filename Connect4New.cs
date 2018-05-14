@@ -10,6 +10,7 @@ namespace GameAiLib
         {
             public ulong position;
             public ulong mask;
+            public ulong movesCode;
         }
 
         public class NegamaxBrain : GenericNegamaxBrain
@@ -89,8 +90,10 @@ namespace GameAiLib
         private const ulong boardMask
             = bottomMask * ((1ul << 6) - 1);
 
-        public ulong position;
-        public ulong mask;
+        private ulong position;
+        private ulong mask;
+        private ulong movesCode;
+        public List<int> movesList = new List<int>();
         private int moves;
         private bool color
             = true;
@@ -141,11 +144,14 @@ namespace GameAiLib
         {
             var undoToken = new UndoToken {
                 position = position,
-                mask = mask
+                mask = mask,
+                movesCode = movesCode
             };
             mask |= mask + (1ul << (move * 7));
             position ^= mask;
             moves++;
+            movesList.Add(move);
+            movesCode = (movesCode << 3) + (ulong)(move + 1);
             color = !color;
             // check if this resulted in a win
             // horizontal
@@ -168,14 +174,21 @@ namespace GameAiLib
             var undoToken = (UndoToken)_undoToken;
             position = undoToken.position;
             mask = undoToken.mask;
+            movesCode = undoToken.movesCode;
             winningState = false;
             moves--;
+            movesList.RemoveAt(movesList.Count - 1);
             color = !color;
         }
 
         public ulong NodeCode()
         {
-            return position + mask; //+ bottomMask; (bottomMask is constant)
+            return position + mask; 
+        }
+
+        public ulong MovesCode()
+        {
+            return movesCode;
         }
 
         public override string ToString()
@@ -199,7 +212,8 @@ namespace GameAiLib
                 }
                 boardStr += Environment.NewLine;
             }
-            return boardStr + "0 1 2 3 4 5 6";
+            boardStr += "0 1 2 3 4 5 6";
+            return boardStr;
         }
     }
 }
