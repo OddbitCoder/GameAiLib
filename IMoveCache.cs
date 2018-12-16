@@ -4,7 +4,7 @@ namespace GameAiLib
 {
     public interface IMoveCacheItem
     {
-        IEnumerable<int> Moves { get; }
+        IList<int> Moves { get; }
     }
 
     public interface IMoveCache

@@ -20,11 +20,9 @@ namespace GameAiLib
         {
             if (moveCache != null && moveCache.Lookup(game, out IMoveCacheItem item))
             {
-                var moves = item.Moves.ToArray();
-                if (((Connect4New)game).movesList.Count > 0)
-                    Console.WriteLine(((Connect4New)game).movesList.Select(x => x.ToString()).Aggregate((a, b) => a + "," + b));
+                var moves = item.Moves;
                 Console.WriteLine($"Good moves: {moves.Select(x => x.ToString()).Aggregate((a, b) => a + "," + b)}");
-                int move = moves[rndGen.Next(moves.Length)];
+                int move = moves[rndGen.Next(moves.Count)];
                 game.MakeMove(move);
                 return move;
             }

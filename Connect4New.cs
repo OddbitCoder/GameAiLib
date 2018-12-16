@@ -4,6 +4,20 @@ using System.Collections.Generic;
 
 namespace GameAiLib
 {
+    public static class ToStringExtensions
+    {
+        public static string AsString(this ulong val)
+        {
+            var str = Convert.ToString((long)val, 2).PadLeft(49, '0');
+            var final = "";
+            for (int i = 0; i < 49; i += 7)
+            {
+                final += str.Substring(i, 7) + Environment.NewLine;
+            }
+            return final;
+        }
+    }
+
     public class Connect4New : IGameNew
     {
         public struct UndoToken
@@ -15,7 +29,7 @@ namespace GameAiLib
 
         public class NegamaxBrain : GenericNegamaxBrain
         {
-            private int[] order
+            private readonly int[] order
                 = new[] { 5, 3, 1, 0, 2, 4, 6 };
 
             public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) : base(maxDepth, cache, moveCache)
@@ -27,14 +41,19 @@ namespace GameAiLib
                 var game = (Connect4New)_game;
                 if (game.IsWinningState)
                 {
-                    bool player1Wins = !game.color;
-                    return (player1Wins ? 1 : -1) * 6 * 7;
+                    bool player1Wins = !game.Color;
+                    return (player1Wins ? 1 : -1) * 4242; // (6 * 7) * 100 + (6 * 7)
                 }
                 else
                 {
-                    int scoreP1 = PopCount(ComputeWinningPositions(game.position, game.mask));
-                    int scoreP2 = PopCount(ComputeWinningPositions(game.position ^ game.mask, game.mask));
-                    return !game.color ? (scoreP1 - scoreP2) : (scoreP2 - scoreP1);
+                    ulong otherPosition = game.position ^ game.mask;
+                    int scoreP1 = CountOnes(ComputeWinningPositions(game.position, game.mask));
+                    int scoreP2 = CountOnes(ComputeWinningPositions(otherPosition, game.mask));
+                    int scorePairsP1 = CountOnes(ComputeWinningPositionsForPairs(game.position, game.mask));
+                    int scorePairsP2 = CountOnes(ComputeWinningPositionsForPairs(otherPosition, game.mask));
+                    int score = (scoreP1 * 100 + scorePairsP1) - (scoreP2 * 100 + scorePairsP2);
+                    if (game.Color) { score = -score; }
+                    return score;
                 }
             }
 
@@ -43,41 +62,101 @@ namespace GameAiLib
                 return game.AvailableMoves.OrderBy(m => order[m]);
             }
 
-            private ulong ComputeWinningPositions(ulong position, ulong mask)
+            private ulong ComputeWinningPositionsForPairs(ulong position, ulong mask)
             {
-                const int HEIGHT = 6;
+                ulong nmask = ~mask & boardMask;
 
                 // vertical
-                ulong r = (position << 1) & (position << 2) & (position << 3);
+                ulong r = position & (position << 1); // two in a row?
+                r = (r << 1) & nmask; // free cell above?
+                r = (r << 1) & nmask; // another free cell above?
+                r |= r >> 1;
 
                 // horizontal
-                ulong p = (position << (HEIGHT + 1)) & (position << 2 * (HEIGHT + 1));
-                r |= p & (position << 3 * (HEIGHT + 1));
-                r |= p & (position >> (HEIGHT + 1));
-                p = (position >> (HEIGHT + 1)) & (position >> 2 * (HEIGHT + 1));
-                r |= p & (position << (HEIGHT + 1));
-                r |= p & (position >> 3 * (HEIGHT + 1));
+                // left
+                ulong p = position & (position >> 7); // two in a row?
+                p = (p >> 7) & nmask; // free cell to the left?
+                p = (p >> 7) & nmask; // another free cell to the left?
+                r |= p | (p << 7);
+                // right
+                p = position & (position << 7); // two in a row?
+                p = (p << 7) & nmask; // free cell to the right?
+                p = (p << 7) & nmask; // another free cell to the right?
+                r |= p | (p >> 7);
+                // left, right
+                p = position & (position << 7); // two in a row?
+                p = (p << 7) & nmask; // free cell to the right?
+                p = (p >> 21) & nmask; // free cell to the left?
+                r |= p | (p << 21);
+
+                // diagonal 
+                // left-up
+                p = position & (position >> 6); 
+                p = (p >> 6) & nmask; 
+                p = (p >> 6) & nmask; 
+                r |= p | (p << 6);
+                // left-down
+                p = position & (position >> 8); 
+                p = (p >> 8) & nmask; 
+                p = (p >> 8) & nmask; 
+                r |= p | (p << 8);
+                // right-up
+                p = position & (position << 8); 
+                p = (p << 8) & nmask; 
+                p = (p << 8) & nmask; 
+                r |= p | (p >> 8);
+                // right-down
+                p = position & (position << 6); 
+                p = (p << 6) & nmask; 
+                p = (p << 6) & nmask; 
+                r |= p | (p >> 6);
+                // right-up, left-down
+                p = position & (position << 8); 
+                p = (p << 8) & nmask;
+                p = (p >> 24) & nmask;
+                r |= p | (p << 24);
+                // left-up, right-down
+                p = position & (position >> 6);
+                p = (p >> 6) & nmask;
+                p = (p << 18) & nmask;
+                r |= p | (p >> 18);
+
+                return r;
+            }
+
+            private ulong ComputeWinningPositions(ulong position, ulong mask)
+            {
+                // vertical
+                 ulong r = (position << 1) & (position << 2) & (position << 3);
+
+                // horizontal
+                ulong p = (position << 7) & (position << 2 * 7);
+                r |= p & (position << 3 * 7);
+                r |= p & (position >> 7);
+                p = (position >> 7) & (position >> 2 * 7);
+                r |= p & (position << 7);
+                r |= p & (position >> 3 * 7);
 
                 // diagonal 1
-                p = (position << HEIGHT) & (position << 2 * HEIGHT);
-                r |= p & (position << 3 * HEIGHT);
-                r |= p & (position >> HEIGHT);
-                p = (position >> HEIGHT) & (position >> 2 * HEIGHT);
-                r |= p & (position << HEIGHT);
-                r |= p & (position >> 3 * HEIGHT);
+                p = (position << 6) & (position << 2 * 6);
+                r |= p & (position << 3 * 6);
+                r |= p & (position >> 6);
+                p = (position >> 6) & (position >> 2 * 6);
+                r |= p & (position << 6);
+                r |= p & (position >> 3 * 6);
 
                 // diagonal 2
-                p = (position << (HEIGHT + 2)) & (position << 2 * (HEIGHT + 2));
-                r |= p & (position << 3 * (HEIGHT + 2));
-                r |= p & (position >> (HEIGHT + 2));
-                p = (position >> (HEIGHT + 2)) & (position >> 2 * (HEIGHT + 2));
-                r |= p & (position << (HEIGHT + 2));
-                r |= p & (position >> 3 * (HEIGHT + 2));
+                p = (position << 8) & (position << 2 * 8);
+                r |= p & (position << 3 * 8);
+                r |= p & (position >> 8);
+                p = (position >> 8) & (position >> 2 * 8);
+                r |= p & (position << 8);
+                r |= p & (position >> 3 * 8);
 
                 return r & (boardMask ^ mask);
             }
 
-            private int PopCount(ulong m)
+            private int CountOnes(ulong m)
             {
                 int c = 0;
                 for (c = 0; m != 0; c++) { m &= m - 1; }
@@ -93,31 +172,22 @@ namespace GameAiLib
         private ulong position;
         private ulong mask;
         private ulong movesCode;
-        public List<int> movesList = new List<int>();
         private int moves;
-        private bool color
-            = true;
-        private bool winningState
-            = false;
 
         public Connect4New()
         {
         }
 
-        public bool IsWinningState
-        {
-            get { return winningState; }
-        }
+        public bool IsWinningState { get; private set; } 
+            = false;
 
         private bool IsFull
         {
             get { return moves == 6 * 7; }
         }
 
-        public bool Color
-        {
-            get { return color; }
-        }
+        public bool Color { get; private set; } 
+            = true;
 
         public bool IsTerminalState
         {
@@ -150,22 +220,21 @@ namespace GameAiLib
             mask |= mask + (1ul << (move * 7));
             position ^= mask;
             moves++;
-            movesList.Add(move);
             movesCode = (movesCode << 3) + (ulong)(move + 1);
-            color = !color;
+            Color = !Color;
             // check if this resulted in a win
             // horizontal
             ulong m = position & (position >> 7);
-            if ((m & (m >> 14)) != 0) { winningState = true; }
+            if ((m & (m >> 14)) != 0) { IsWinningState = true; }
             // diag 1
             m = position & (position >> 6);
-            if ((m & (m >> 12)) != 0) { winningState = true; }
+            if ((m & (m >> 12)) != 0) { IsWinningState = true; }
             // diag 2
             m = position & (position >> 8);
-            if ((m & (m >> 16)) != 0) { winningState = true; }
+            if ((m & (m >> 16)) != 0) { IsWinningState = true; }
             // vertical
             m = position & (position >> 1);
-            if ((m & (m >> 2)) != 0) { winningState = true; }
+            if ((m & (m >> 2)) != 0) { IsWinningState = true; }
             return undoToken;
         }
 
@@ -175,10 +244,9 @@ namespace GameAiLib
             position = undoToken.position;
             mask = undoToken.mask;
             movesCode = undoToken.movesCode;
-            winningState = false;
+            IsWinningState = false;
             moves--;
-            movesList.RemoveAt(movesList.Count - 1);
-            color = !color;
+            Color = !Color;
         }
 
         public ulong NodeCode()
@@ -212,8 +280,7 @@ namespace GameAiLib
                 }
                 boardStr += Environment.NewLine;
             }
-            boardStr += "0 1 2 3 4 5 6";
-            return boardStr;
+            return boardStr + "0 1 2 3 4 5 6";
         }
     }
 }

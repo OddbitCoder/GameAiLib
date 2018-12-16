@@ -5,7 +5,7 @@
         public ulong nodeCode;
         public byte depth;
         public Flag flag;
-        public sbyte val;
+        public short val;
         // interface
         public int Depth => depth;
         public Flag Flag => flag;
@@ -44,7 +44,7 @@
                 nodeCode = nodeCode,
                 depth = (byte)depth,
                 flag = flag,
-                val = (sbyte)val
+                val = (short)val
             };
         }
     }

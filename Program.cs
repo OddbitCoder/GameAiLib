@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace GameAiLib
 {
@@ -73,8 +76,71 @@ namespace GameAiLib
             return bestValue;
         }
 
+        static void Recurse(Connect4New game, int d, string query, List<string> queries)
+        {
+            if (d < 0) { return; }
+            queries.Add(query);
+            foreach (var move in game.AvailableMoves)
+            {
+                var token = game.MakeMove(move);
+                if (!game.IsTerminalState)
+                {
+                    Recurse(game, d - 1, query + (move + 1), queries);
+                }
+                game.UndoMove(token);
+            }
+        }
+
         static void Main(string[] args)
         {
+            //var game = new Connect4New();
+            //var queries = new List<string>();
+            //Recurse(game, 8, "", queries);
+            //Console.WriteLine($"{queries.Count} queries. Starting Web acq.");
+            //var fn = @"C:\Work\GameAiLib\data\starting8.ojpl";
+            //var done = new HashSet<string>(File.ReadAllLines(fn).Select(line => {
+            //    var m = Regex.Match(line, @"""pos"":""(.*?)""");
+            //    //Console.WriteLine(m.Result("$1"));
+            //    return m.Result("$1");
+            //}));
+
+            //ServicePointManager.DefaultConnectionLimit = 32;
+            //using (var w = new StreamWriter(fn, append: true))
+            //{
+            //    Parallel.ForEach(queries.Where(q=>!done.Contains(q)), new ParallelOptions { MaxDegreeOfParallelism = 32 }, query =>
+            //    {
+            //        //if (!done.Contains(query))
+            //        //{
+            //            using (WebClient client = new WebClient())
+            //            {
+            //                try
+            //                {
+
+            //                    string htmlCode = client.DownloadString("http://connect4.gamesolver.org/solve?pos=" + query);
+            //                    lock (w)
+            //                    {
+            //                        Console.WriteLine($"{query}");
+            //                        w.WriteLine(htmlCode);
+            //                    }
+
+
+            //                }
+            //                catch (Exception e) { Console.WriteLine($"{query}! {e}"); }
+            //            }
+            //        //}
+            //        //else
+            //        //{
+            //        //    Console.WriteLine($"{query}*");
+            //        //}
+            //    });
+            //}
+
+
+
+            //return;
+
+
+
             var cache = new Connect4Cache();
             var moveCache = new Connect4MoveCache(@"C:\Work\GameAiLib\data\starting.ojpl");
             //bool player1Starts = true;
@@ -100,7 +166,7 @@ namespace GameAiLib
             //Console.WriteLine($"Cache hits: {cache.cacheHits}");
             //Console.WriteLine($"Exact hits: {cache.exactHits}");
             //Game.Play(new Connect4(), new Connect4.MinimaxBrain(maxDepth: 10));
-            Game.PlayNew(new Connect4New(), new Connect4New.NegamaxBrain(15, cache, moveCache), skipPlayer1: true);
+            Game.PlayNew(new Connect4New(), new Connect4New.NegamaxBrain(5, cache, null), skipPlayer1: true);
 
 
 

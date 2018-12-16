@@ -10,7 +10,7 @@ namespace GameAiLib
     {
         public byte moves;
         // interface
-        public IEnumerable<int> Moves
+        public IList<int> Moves
         {
             get
             {
