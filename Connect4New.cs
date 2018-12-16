@@ -225,16 +225,16 @@ namespace GameAiLib
             // check if this resulted in a win
             // horizontal
             ulong m = position & (position >> 7);
-            if ((m & (m >> 14)) != 0) { IsWinningState = true; }
+            if ((m & (m >> 14)) != 0) { IsWinningState = true; return undoToken; }
             // diag 1
             m = position & (position >> 6);
-            if ((m & (m >> 12)) != 0) { IsWinningState = true; }
+            if ((m & (m >> 12)) != 0) { IsWinningState = true; return undoToken; }
             // diag 2
             m = position & (position >> 8);
-            if ((m & (m >> 16)) != 0) { IsWinningState = true; }
+            if ((m & (m >> 16)) != 0) { IsWinningState = true; return undoToken; }
             // vertical
             m = position & (position >> 1);
-            if ((m & (m >> 2)) != 0) { IsWinningState = true; }
+            if ((m & (m >> 2)) != 0) { IsWinningState = true; return undoToken; }
             return undoToken;
         }
 
