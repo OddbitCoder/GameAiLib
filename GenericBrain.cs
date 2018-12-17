@@ -16,21 +16,21 @@ namespace GameAiLib
             this.moveCache = moveCache;
         }
 
-        public int MakeMove(IGame game)
+        public string MakeMove(IGame game)
         {
             if (moveCache != null && moveCache.Lookup(game, out IMoveCacheItem item))
             {
                 var moves = item.Moves;
                 Console.WriteLine($"Good moves: {moves.Select(x => x.ToString()).Aggregate((a, b) => a + "," + b)}");
-                int move = moves[rndGen.Next(moves.Count)];
+                var move = moves[rndGen.Next(moves.Count)];
                 game.MakeMove(move);
                 return move;
             }
             else
             {
                 double bestScore = double.MinValue;
-                var bestMoves = new List<int>();
-                foreach (int move in game.AvailableMoves)
+                var bestMoves = new List<string>();
+                foreach (var move in game.AvailableMoves)
                 {
                     var undoToken = game.MakeMove(move);
                     double score = EvalGame(game);
@@ -39,7 +39,7 @@ namespace GameAiLib
                     if (score == bestScore) { bestMoves.Add(move); }
                     game.UndoMove(undoToken);
                 }
-                int bestMove = bestMoves[rndGen.Next(bestMoves.Count)];
+                var bestMove = bestMoves[rndGen.Next(bestMoves.Count)];
                 game.MakeMove(bestMove);
                 return bestMove;
             }

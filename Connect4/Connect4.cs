@@ -60,9 +60,10 @@ namespace GameAiLib
                 }
             }
 
-            protected override IEnumerable<int> OrderedMoves(IGame game)
+            protected override IEnumerable<string> OrderedMoves(IGame game)
             {
-                return game.AvailableMoves.OrderBy(m => order[m]);
+                // TODO: optimize this?
+                return game.AvailableMoves.OrderBy(m => order[m.FirstCharAsInt()]);
             }
 
             private ulong ComputeWinningPositionsForPairs(ulong position, ulong mask)
@@ -197,33 +198,34 @@ namespace GameAiLib
             get { return IsWinningState || IsFull; }
         }
 
-        public IEnumerable<int> AvailableMoves
+        public IEnumerable<string> AvailableMoves
         {
             get
             {
-                var list = new List<int>(7);
+                var list = new List<string>(7);
                 for (int col = 0; col < 7; col++)
                 {
                     if (((1ul << 5 << (col * 7)) & mask) == 0)
                     {
-                        list.Add(col);
+                        list.Add(col.ToString());
                     }
                 }
                 return list;
             }
         }
 
-        public object MakeMove(int move)
+        public object MakeMove(string move)
         {
             var undoToken = new UndoToken {
                 position = position,
                 mask = mask,
                 movesCode = movesCode
             };
-            mask |= mask + (1ul << (move * 7));
+            int moveAsInt = move.FirstCharAsInt();
+            mask |= mask + (1ul << (moveAsInt * 7));
             position ^= mask;
             moves++;
-            movesCode = (movesCode << 3) + (ulong)(move + 1);
+            movesCode = (movesCode << 3) + (ulong)(moveAsInt + 1);
             Color = !Color;
             // check if this resulted in a win
             // horizontal

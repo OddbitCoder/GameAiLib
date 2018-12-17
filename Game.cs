@@ -45,7 +45,7 @@ namespace GameAiLib
                 if (player1Starts)
                 {
                     //game.MakeMove(player2.MakeMove(gameOld, Player.Player1));
-                    gameOld.MakeMove(player1.MakeMove(game), Player.Player1);
+                    gameOld.MakeMove(Convert.ToInt32(player1.MakeMove(game)), Player.Player1);
                     //Console.WriteLine(game);
                     //Debug.Assert(((Connect4)gameOld).position == ((Connect4New)game).position);
                     //Debug.Assert(((Connect4)gameOld).mask == ((Connect4New)game).mask);
@@ -53,7 +53,7 @@ namespace GameAiLib
                     if (game.IsTerminalState) { return null; }
                 }
                 player1Starts = true;
-                game.MakeMove(player2.MakeMove(gameOld, Player.Player2));
+                game.MakeMove(player2.MakeMove(gameOld, Player.Player2).ToString());
                 //gameOld.MakeMove(player1.MakeMove(game), Player.Player2);
                 //Console.WriteLine(gameOld);
                 //Console.ReadLine();
@@ -89,7 +89,7 @@ namespace GameAiLib
                     Console.WriteLine(game);
                 }
                 Console.Write("Your move? ");
-                int playerMove = Convert.ToInt32(Console.ReadLine()); // TODO: repeat this if the move is not valid
+                var playerMove = Console.ReadLine(); // TODO: repeat this if the move is not valid
                 game.MakeMove(playerMove);
                 if (game.IsWinningState)
                 {

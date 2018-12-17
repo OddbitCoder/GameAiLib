@@ -6,8 +6,8 @@ namespace GameAiLib
     {
         bool IsTerminalState { get; }
         bool IsWinningState { get; }
-        IEnumerable<int> AvailableMoves { get; }
-        object MakeMove(int move);
+        IEnumerable<string> AvailableMoves { get; }
+        object MakeMove(string move);
         void UndoMove(object undoToken);
         bool Color { get; } // who will make the next move? (true = the player that started the game)
     }

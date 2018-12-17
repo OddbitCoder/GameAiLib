@@ -10,16 +10,16 @@ namespace GameAiLib
     {
         public byte moves;
         // interface
-        public IList<int> Moves
+        public IList<string> Moves
         {
             get
             {
-                var listOfMoves = new List<int>(7);
+                var listOfMoves = new List<string>(7);
                 for (int move = 1; move <= 7; move++)
                 {
                     if ((moves & (1 << (move - 1))) != 0)
                     {
-                        listOfMoves.Add(move - 1);
+                        listOfMoves.Add((move - 1).ToString());
                     }
                 }
                 return listOfMoves;
