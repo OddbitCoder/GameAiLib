@@ -1,31 +1,51 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace GameAiLib
 {
     public abstract class GenericBrain : IBrain
     {
-        private static Random rng 
+        private static Random rndGen 
             = new Random();
 
-        public int MakeMove(IGame game, Player player)
+        private IMoveCache moveCache;
+
+        public GenericBrain(IMoveCache moveCache = null)
         {
-            double bestScore = double.MinValue;
-            var bestMoves = new List<int>();
-            foreach (int move in game.AvailableMoves(player))
-            {
-                var undoToken = game.MakeMove(move, player);
-                double score = EvalGame(game, player);
-                //Console.WriteLine($"{move}: {score}");
-                if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
-                if (score == bestScore) { bestMoves.Add(move); }
-                game.UndoMove(move, player, undoToken);
-            }
-            int bestMove = bestMoves[rng.Next(bestMoves.Count)];
-            game.MakeMove(bestMove, player);
-            return bestMove;
+            this.moveCache = moveCache;
         }
 
-        protected abstract double EvalGame(IGame game, Player player);
+        public int MakeMove(IGame game)
+        {
+            if (moveCache != null && moveCache.Lookup(game, out IMoveCacheItem item))
+            {
+                var moves = item.Moves;
+                Console.WriteLine($"Good moves: {moves.Select(x => x.ToString()).Aggregate((a, b) => a + "," + b)}");
+                int move = moves[rndGen.Next(moves.Count)];
+                game.MakeMove(move);
+                return move;
+            }
+            else
+            {
+                double bestScore = double.MinValue;
+                var bestMoves = new List<int>();
+                foreach (int move in game.AvailableMoves)
+                {
+                    var undoToken = game.MakeMove(move);
+                    double score = EvalGame(game);
+                    Console.WriteLine($"{move}: {score}");
+                    if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
+                    if (score == bestScore) { bestMoves.Add(move); }
+                    game.UndoMove(undoToken);
+                }
+                int bestMove = bestMoves[rndGen.Next(bestMoves.Count)];
+                game.MakeMove(bestMove);
+                return bestMove;
+            }
+        }
+
+        // evaluates the player that made the last move
+        protected abstract double EvalGame(IGame game); 
     }
 }

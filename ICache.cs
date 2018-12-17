@@ -16,7 +16,7 @@
 
     public interface ICache
     {
-        bool Lookup(IGameNew game, out ICacheItem item);
-        void Put(IGameNew game, int depth, Flag flag, double val);
+        bool Lookup(IGame game, out ICacheItem item);
+        void Put(IGame game, int depth, Flag flag, double val);
     }
 }

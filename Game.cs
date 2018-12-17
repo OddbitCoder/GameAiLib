@@ -4,7 +4,7 @@ namespace GameAiLib
 {
     public static class Game
     {
-        public static Player? Play(IGame game, IBrain player1, IBrain player2, bool player1Starts = true)
+        public static Player? Play(IGameOld game, IBrainOld player1, IBrainOld player2, bool player1Starts = true)
         {
             while (true)
             {
@@ -21,7 +21,7 @@ namespace GameAiLib
             }
         }
 
-        public static Player? Play(IGameNew game, IBrainNew player1, IBrainNew player2, bool player1Starts = true)
+        public static Player? Play(IGame game, IBrain player1, IBrain player2, bool player1Starts = true)
         {
             while (true)
             {
@@ -38,7 +38,7 @@ namespace GameAiLib
             }
         }
 
-        public static Player? Play(IGameNew game, IGame gameOld, IBrainNew player1, IBrain player2, bool player1Starts = true)
+        public static Player? Play(IGame game, IGameOld gameOld, IBrain player1, IBrainOld player2, bool player1Starts = true)
         {
             while (true)
             {
@@ -64,7 +64,7 @@ namespace GameAiLib
             }
         }
 
-        public static void PlayNew(IGameNew game, IBrainNew brain, bool skipPlayer1)
+        public static void PlayNew(IGame game, IBrain brain, bool skipPlayer1)
         {
             while (true)
             {
@@ -106,7 +106,7 @@ namespace GameAiLib
             }
         } 
 
-        public static void Play(IGame game, IBrain brain, bool humanStarts = false)
+        public static void Play(IGameOld game, IBrainOld brain, bool humanStarts = false)
         {
             bool skipPlayer1 = humanStarts;
             while (true)

@@ -1,20 +1,30 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace GameAiLib
 {
-    public abstract class GenericNegamaxBrain : GenericBrainNew
+    public abstract class GenericNegamaxBrain : IBrain
     {
         private int maxDepth;
-        private ICache cache;
+        private bool iterative;
 
-        public GenericNegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) : base(moveCache)
+        private ICache cache;
+        private IMoveCache moveCache;
+
+        private static Random rng
+            = new Random();
+
+        public GenericNegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null,
+            bool iterative = false) 
         {
             this.maxDepth = maxDepth;
             this.cache = cache;
+            this.iterative = iterative;
+            this.moveCache = moveCache;
         }
 
-        private double Negamax(IGameNew game, int depth, bool color)
+        private double Negamax(IGame game, int depth, bool color)
         {
             if (depth == 0 || game.IsTerminalState)
             {
@@ -32,7 +42,7 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private double NegamaxAlphaBeta(IGameNew game, int depth, double alpha, double beta, bool color)
+        private double NegamaxAlphaBeta(IGame game, int depth, double alpha, double beta, bool color)
         {
             if (depth == 0 || game.IsTerminalState)
             {
@@ -51,7 +61,7 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private double NegamaxAlphaBetaWithTable(IGameNew game, int depth, double alpha, double beta, bool color, ICache cache) 
+        private double NegamaxAlphaBetaWithTable(IGame game, int depth, double alpha, double beta, bool color, ICache cache) 
         {
             //alphaOrig := α
             double alphaOrig = alpha;
@@ -122,21 +132,55 @@ namespace GameAiLib
             return bestValue;
         }
 
-        protected override double EvalGame(IGameNew game)
+        private double EvalGame(IGame game, int maxDepth)
         {
-#if SIMPLE_NEGAMAX
+#if NEGAMAX_SIMPLE
             return -Negamax(game, maxDepth, game.Color);
+#elif NEGAMAX_ALPHABETA_NO_CACHE
+            return -NegamaxAlphaBeta(game, maxDepth, double.MinValue, double.MaxValue, game.Color);
 #else
             return -NegamaxAlphaBetaWithTable(game, maxDepth, double.MinValue, double.MaxValue, game.Color, cache);
 #endif
         }
 
         // evaluates the player that started the game
-        protected abstract double NegamaxEval(IGameNew game); 
+        protected abstract double NegamaxEval(IGame game); 
 
-        protected virtual IEnumerable<int> OrderedMoves(IGameNew game)
+        protected virtual IEnumerable<int> OrderedMoves(IGame game)
         {
             return game.AvailableMoves;
+        }
+
+        public int MakeMove(IGame game)
+        {
+            if (moveCache != null && moveCache.Lookup(game, out IMoveCacheItem item))
+            {
+                var moves = item.Moves;
+                Console.WriteLine($"Good moves: {moves.Select(x => x.ToString()).Aggregate((a, b) => a + "," + b)}");
+                int move = moves[rng.Next(moves.Count)];
+                game.MakeMove(move);
+                return move;
+            }
+            else
+            {
+                double bestScore = double.MinValue;
+                var bestMoves = new List<int>();
+                for (int i = 0; i <= maxDepth; i++)
+                {
+                    foreach (int move in game.AvailableMoves)
+                    {
+                        var undoToken = game.MakeMove(move);
+                        double score = EvalGame(game, i);
+                        Console.WriteLine($"{move}: {score}");
+                        if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
+                        if (score == bestScore) { bestMoves.Add(move); }
+                        game.UndoMove(undoToken);
+                    }
+                }
+                int bestMove = bestMoves[rng.Next(bestMoves.Count)];
+                game.MakeMove(bestMove);
+                return bestMove;
+            }
         }
     }
 }

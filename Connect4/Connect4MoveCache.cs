@@ -76,9 +76,9 @@ namespace GameAiLib
             };
         }
 
-        public bool Lookup(IGameNew _game, out IMoveCacheItem _item)
+        public bool Lookup(IGame _game, out IMoveCacheItem _item)
         {
-            var game = (Connect4New)_game;
+            var game = (Connect4)_game;
             ulong code = game.MovesCode();
             if (code < (ulong)items.Length)
             {

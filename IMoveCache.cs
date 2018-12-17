@@ -9,6 +9,6 @@ namespace GameAiLib
 
     public interface IMoveCache
     {
-        bool Lookup(IGameNew game, out IMoveCacheItem item);
+        bool Lookup(IGame game, out IMoveCacheItem item);
     }
 }

@@ -2,7 +2,7 @@
 {
     public class SimpleNegamaxBrain : GenericNegamaxBrain
     {
-        protected override double NegamaxEval(IGameNew game)
+        protected override double NegamaxEval(IGame game)
         {
             if (game.IsWinningState)
             {

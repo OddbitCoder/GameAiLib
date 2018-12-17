@@ -11,7 +11,7 @@ namespace GameAiLib
 {
     class Program
     {
-        private static double NegamaxEval(IGameNew game)
+        private static double NegamaxEval(IGame game)
         {
             if (game.IsWinningState)
             {
@@ -26,7 +26,7 @@ namespace GameAiLib
             while (true) try { a(); break; } catch { }
         }
 
-        private static double Negamax(TicTacToeNew game, int depth, bool color)
+        private static double Negamax(TicTacToe game, int depth, bool color)
         {
             if (depth == 0 || game.IsTerminalState)
             {
@@ -50,7 +50,7 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private static double NegamaxAlphaBeta(TicTacToeNew game, int depth, double alpha, double beta, bool color)
+        private static double NegamaxAlphaBeta(TicTacToe game, int depth, double alpha, double beta, bool color)
         {
             if (depth == 0 || game.IsTerminalState)
             {
@@ -76,7 +76,7 @@ namespace GameAiLib
             return bestValue;
         }
 
-        static void Recurse(Connect4New game, int d, string query, List<string> queries)
+        static void Recurse(Connect4 game, int d, string query, List<string> queries)
         {
             if (d < 0) { return; }
             queries.Add(query);
@@ -166,7 +166,7 @@ namespace GameAiLib
             //Console.WriteLine($"Cache hits: {cache.cacheHits}");
             //Console.WriteLine($"Exact hits: {cache.exactHits}");
             //Game.Play(new Connect4(), new Connect4.MinimaxBrain(maxDepth: 10));
-            Game.PlayNew(new Connect4New(), new Connect4New.NegamaxBrain(5, cache, null), skipPlayer1: true);
+            Game.PlayNew(new Connect4(), new Connect4.NegamaxBrain(15, cache, null), skipPlayer1: true);
 
 
 

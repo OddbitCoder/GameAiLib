@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace GameAiLib
 {
-    public class Connect4 : IGame
+    public class Connect4Old : IGameOld
     {
         private const ulong bottomMask
             = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
@@ -95,9 +95,9 @@ namespace GameAiLib
             {
             }
 
-            protected override double MinimaxEval(IGame _game, Player player)
+            protected override double MinimaxEval(IGameOld _game, Player player)
             {
-                var game = (Connect4)_game;
+                var game = (Connect4Old)_game;
                 if (game.Winner == null)
                 {
                     int scoreP1 = PopCount(ComputeWinningPositions(game.position, game.mask));
@@ -117,7 +117,7 @@ namespace GameAiLib
             private int[] order
                 = new[] { 5, 3, 1, 0, 2, 4, 6 };
 
-            protected override IEnumerable<int> OrderedMoves(IGame game, Player player)
+            protected override IEnumerable<int> OrderedMoves(IGameOld game, Player player)
             {
                 return game.AvailableMoves(player).OrderBy(m => order[m]);
             }

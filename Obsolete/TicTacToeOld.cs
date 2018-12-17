@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace GameAiLib
 {
-    public class TicTacToe : IGame
+    public class TicTacToeOld : IGameOld
     {
         private byte[][] board
             = new byte[3][];
@@ -13,7 +13,7 @@ namespace GameAiLib
         private int depth
             = 0;
 
-        public TicTacToe()
+        public TicTacToeOld()
         {
             for (int row = 0; row < 3; row++)
             {

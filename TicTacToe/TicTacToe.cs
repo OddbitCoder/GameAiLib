@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace GameAiLib
 {
-    public class TicTacToeNew : IGameNew
+    public class TicTacToe : IGame
     {
         private byte[][] board
             = new byte[3][];
@@ -15,7 +15,7 @@ namespace GameAiLib
         private bool color
             = true;
 
-        public TicTacToeNew()
+        public TicTacToe()
         {
             for (int row = 0; row < 3; row++)
             {

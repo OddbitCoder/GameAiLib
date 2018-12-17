@@ -25,10 +25,10 @@
             items = new Connect4CacheItem[cacheSize];
         }
 
-        public bool Lookup(IGameNew game, out ICacheItem item)
+        public bool Lookup(IGame game, out ICacheItem item)
         {
             numLookups++;
-            ulong nodeCode = ((Connect4New)game).NodeCode();
+            ulong nodeCode = ((Connect4)game).NodeCode();
             ulong key = nodeCode % (ulong)items.Length;
             item = items[key];
             bool hit = items[key].nodeCode == nodeCode;
@@ -36,9 +36,9 @@
             return hit;
         }
 
-        public void Put(IGameNew game, int depth, Flag flag, double val)
+        public void Put(IGame game, int depth, Flag flag, double val)
         {
-            ulong nodeCode = ((Connect4New)game).NodeCode();
+            ulong nodeCode = ((Connect4)game).NodeCode();
             ulong key = nodeCode % (ulong)items.Length;
             items[key] = new Connect4CacheItem {
                 nodeCode = nodeCode,

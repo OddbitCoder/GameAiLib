@@ -18,7 +18,7 @@ namespace GameAiLib
         }
     }
 
-    public class Connect4New : IGameNew
+    public class Connect4 : IGame
     {
         public struct UndoToken
         {
@@ -29,20 +29,23 @@ namespace GameAiLib
 
         public class NegamaxBrain : GenericNegamaxBrain
         {
-            private readonly int[] order
+            private int[] order
                 = new[] { 5, 3, 1, 0, 2, 4, 6 };
+            private const double MAX_SCORE
+                = 4242; // (6 * 7) * 100 + (6 * 7)
 
-            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) : base(maxDepth, cache, moveCache)
+            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null, double maxScore = MAX_SCORE) 
+                : base(maxDepth, cache, moveCache)
             {
             }
 
-            protected override double NegamaxEval(IGameNew _game)
+            protected override double NegamaxEval(IGame _game)
             {
-                var game = (Connect4New)_game;
+                var game = (Connect4)_game;
                 if (game.IsWinningState)
                 {
                     bool player1Wins = !game.Color;
-                    return (player1Wins ? 1 : -1) * 4242; // (6 * 7) * 100 + (6 * 7)
+                    return (player1Wins ? 1 : -1) * MAX_SCORE; 
                 }
                 else
                 {
@@ -57,7 +60,7 @@ namespace GameAiLib
                 }
             }
 
-            protected override IEnumerable<int> OrderedMoves(IGameNew game)
+            protected override IEnumerable<int> OrderedMoves(IGame game)
             {
                 return game.AvailableMoves.OrderBy(m => order[m]);
             }
@@ -174,7 +177,7 @@ namespace GameAiLib
         private ulong movesCode;
         private int moves;
 
-        public Connect4New()
+        public Connect4()
         {
         }
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GameAiLib
 {
-    public abstract class GenericMinimaxBrain : GenericBrain
+    public abstract class GenericMinimaxBrain : GenericBrainOld
     {
         private int maxDepth;
 
@@ -12,7 +12,7 @@ namespace GameAiLib
             this.maxDepth = maxDepth;
         }
 
-        private double Minimax(IGame game, int depth, Player player, bool maximize)
+        private double Minimax(IGameOld game, int depth, Player player, bool maximize)
         {
             if (depth == 0 || game.IsTerminalState)
             {
@@ -45,7 +45,7 @@ namespace GameAiLib
             }
         }
 
-        private double AlphaBeta(IGame game, int depth, double alpha, double beta, Player player, bool maximize)
+        private double AlphaBeta(IGameOld game, int depth, double alpha, double beta, Player player, bool maximize)
         {
             if (depth == 0 || game.IsTerminalState)
             {
@@ -80,7 +80,7 @@ namespace GameAiLib
             }
         }
 
-        protected override double EvalGame(IGame game, Player player)
+        protected override double EvalGame(IGameOld game, Player player)
         {
 #if SIMPLE_MINIMAX
             return Minimax(game, maxDepth, player.OtherPlayer(), maximize: false);
@@ -89,9 +89,9 @@ namespace GameAiLib
 #endif
         }
 
-        protected abstract double MinimaxEval(IGame game, Player player);
+        protected abstract double MinimaxEval(IGameOld game, Player player);
 
-        protected virtual IEnumerable<int> OrderedMoves(IGame game, Player player)
+        protected virtual IEnumerable<int> OrderedMoves(IGameOld game, Player player)
         {
             return game.AvailableMoves(player);
         }
