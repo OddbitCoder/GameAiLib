@@ -166,7 +166,7 @@ namespace GameAiLib
             //Console.WriteLine($"Cache hits: {cache.cacheHits}");
             //Console.WriteLine($"Exact hits: {cache.exactHits}");
             //Game.Play(new Connect4(), new Connect4.MinimaxBrain(maxDepth: 10));
-            Game.PlayNew(new Connect4(), new Connect4.NegamaxBrain(15, cache, null), skipPlayer1: true);
+            Game.PlayNew(new Connect4(), new Connect4.NegamaxBrain(15, () => new Connect4Cache(), null), skipPlayer1: true);
 
 
 

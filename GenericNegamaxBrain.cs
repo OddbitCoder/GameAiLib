@@ -8,20 +8,26 @@ namespace GameAiLib
     {
         private int maxDepth;
         private bool iterative;
+        private double maxScore;
 
-        private ICache cache;
+        private Func<ICache> cacheConstructor;
         private IMoveCache moveCache;
+
+        private new Dictionary<int, ICache> cacheByDepth
+            = new Dictionary<int, ICache>();
+        private ICache cache;
 
         private static Random rng
             = new Random();
 
-        public GenericNegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null,
-            bool iterative = false) 
+        public GenericNegamaxBrain(int maxDepth = int.MaxValue, Func<ICache> cacheConstructor = null, IMoveCache moveCache = null,
+            bool iterative = false, double maxScore = double.MaxValue) 
         {
             this.maxDepth = maxDepth;
             this.iterative = iterative;
-            this.cache = cache;
+            this.cacheConstructor = cacheConstructor;
             this.moveCache = moveCache;
+            this.maxScore = maxScore;
         }
 
         private double Negamax(IGame game, int depth, bool color)
@@ -32,7 +38,7 @@ namespace GameAiLib
                 return score;
             }
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game))
+            foreach (var move in OrderedMoves(game, null))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -Negamax(game, depth - 1, !color);
@@ -49,7 +55,7 @@ namespace GameAiLib
                 return (color ? 1 : -1) * NegamaxEval(game);
             }
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game))
+            foreach (var move in OrderedMoves(game, null))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
@@ -61,7 +67,8 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private double NegamaxAlphaBetaWithTable(IGame game, int depth, double alpha, double beta, bool color, ICache cache) 
+        private double NegamaxAlphaBetaWithTable(IGame game, int depth, double alpha, double beta, bool color, ICache cache,
+            Dictionary<string, double> ordering) 
         {
             //alphaOrig := α
             double alphaOrig = alpha;
@@ -101,10 +108,10 @@ namespace GameAiLib
             //    if α ≥ β
             //        break
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game))
+            foreach (var move in OrderedMoves(game, ordering))
             {
                 var undoToken = game.MakeMove(move);
-                double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
+                double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache, ordering);
                 game.UndoMove(undoToken);
                 bestValue = Math.Max(bestValue, v);
                 alpha = Math.Max(alpha, v);
@@ -132,21 +139,21 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private double EvalGame(IGame game, int maxDepth)
+        private double EvalGame(IGame game, int maxDepth, ICache cache, Dictionary<string, double> ordering)
         {
 #if NEGAMAX_SIMPLE
             return -Negamax(game, maxDepth, game.Color);
 #elif NEGAMAX_ALPHABETA_NO_CACHE
-            return -NegamaxAlphaBeta(game, maxDepth, double.MinValue, double.MaxValue, game.Color);
+            return -NegamaxAlphaBeta(game, maxDepth, -maxScore, maxScore, game.Color);
 #else
-            return -NegamaxAlphaBetaWithTable(game, maxDepth, double.MinValue, double.MaxValue, game.Color, cache);
+            return -NegamaxAlphaBetaWithTable(game, maxDepth, -maxScore, maxScore, game.Color, cache, ordering);
 #endif
         }
 
         // evaluates the player that started the game
         protected abstract double NegamaxEval(IGame game); 
 
-        protected virtual IEnumerable<string> OrderedMoves(IGame game)
+        protected virtual IEnumerable<string> OrderedMoves(IGame game, Dictionary<string, double> ordering)
         {
             return game.AvailableMoves;
         }
@@ -156,7 +163,7 @@ namespace GameAiLib
             if (moveCache != null && moveCache.Lookup(game, out IMoveCacheItem item))
             {
                 var moves = item.Moves;
-                Console.WriteLine($"Good moves: {moves.Select(x => x.ToString()).Aggregate((a, b) => a + "," + b)}");
+                Console.WriteLine($"Good moves: {moves.Aggregate((a, b) => a + ", " + b)}");
                 var move = moves[rng.Next(moves.Count)];
                 game.MakeMove(move);
                 return move;
@@ -165,20 +172,39 @@ namespace GameAiLib
             {
                 double bestScore = double.MinValue;
                 var bestMoves = new List<string>();
-                int startDepth = !iterative ? maxDepth : 0;
-                for (int depth = startDepth; depth <= maxDepth; depth++)
+                var moves = new Dictionary<string, double>();
+                Dictionary<string, double> ordering = null;
+                bool done = false;
+                for (int depth = !iterative ? maxDepth : 0; depth <= maxDepth; depth++)
                 {
-                    foreach (var move in OrderedMoves(game)) // TODO: order moves according to the last iteration
+                    Console.WriteLine($"DEPTH: {depth}");
+                    if (!cacheByDepth.ContainsKey(depth))
                     {
-                        var undoToken = game.MakeMove(move);
-                        double score = EvalGame(game, depth);
-                        Console.WriteLine($"{move}: {score}");
-                        if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
-                        if (score == bestScore) { bestMoves.Add(move); }
-                        game.UndoMove(undoToken);
-                        // TODO: if 4242 or -4242, keep this score, no need to recompute; in fact, if it's 4242, just make the move
-                        // TODO: caching will not work in iterative mode
+                        cacheByDepth.Add(depth, cacheConstructor?.Invoke());
                     }
+                    cache = cache ?? cacheConstructor?.Invoke();
+                    var t = DateTime.Now;
+                    foreach (var move in OrderedMoves(game, ordering)) 
+                    {
+                        if (!moves.ContainsKey(move))
+                        {
+                            var undoToken = game.MakeMove(move);
+                            double score = EvalGame(game, depth, cache, ordering);
+                            Console.WriteLine($"{move}: {score}");
+                            moves.Add(move, score);
+                            if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
+                            if (score == bestScore) { bestMoves.Add(move); }
+                            game.UndoMove(undoToken);
+                            if (score == maxScore) { done = true; break; } // winning move, don't look any further
+                        }
+                        // TODO: if it's just one move that's not a losing move, take that one
+                    }
+                    Console.WriteLine((DateTime.Now - t).TotalSeconds);
+                    if (done) { break; }
+                    ordering = moves.ToDictionary(x => x.Key, x => x.Value);
+                    moves = moves
+                        .Where(x => x.Value == -maxScore) // no need to re-explore losing paths
+                        .ToDictionary(x => x.Key, x => x.Value);
                 }
                 var bestMove = bestMoves[rng.Next(bestMoves.Count)];
                 game.MakeMove(bestMove);
