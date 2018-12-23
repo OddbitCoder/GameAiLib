@@ -10,23 +10,19 @@ namespace GameAiLib
         private bool iterative;
         private double maxScore;
 
-        private Func<ICache> cacheConstructor;
         private IMoveCache moveCache;
-
-        private new Dictionary<int, ICache> cacheByDepth
-            = new Dictionary<int, ICache>();
         private ICache cache;
 
         private static Random rng
             = new Random();
 
-        public GenericNegamaxBrain(int maxDepth = int.MaxValue, Func<ICache> cacheConstructor = null, IMoveCache moveCache = null,
+        public GenericNegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null,
             bool iterative = false, double maxScore = double.MaxValue) 
         {
             this.maxDepth = maxDepth;
             this.iterative = iterative;
-            this.cacheConstructor = cacheConstructor;
             this.moveCache = moveCache;
+            this.cache = cache;
             this.maxScore = maxScore;
         }
 
@@ -38,7 +34,7 @@ namespace GameAiLib
                 return score;
             }
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game, null))
+            foreach (var move in OrderedMoves(game))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -Negamax(game, depth - 1, !color);
@@ -55,7 +51,7 @@ namespace GameAiLib
                 return (color ? 1 : -1) * NegamaxEval(game);
             }
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game, null))
+            foreach (var move in OrderedMoves(game))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
@@ -67,8 +63,7 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private double NegamaxAlphaBetaWithTable(IGame game, int depth, double alpha, double beta, bool color, ICache cache,
-            Dictionary<string, double> ordering) 
+        private double NegamaxAlphaBetaWithTable(IGame game, int depth, double alpha, double beta, bool color, ICache cache) 
         {
             //alphaOrig := α
             double alphaOrig = alpha;
@@ -107,11 +102,17 @@ namespace GameAiLib
             //    α := max(α, v)
             //    if α ≥ β
             //        break
-            double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game, ordering))
+            var orderedMoves = OrderedMoves(game).ToArray();
+            foreach (var move in orderedMoves)
             {
                 var undoToken = game.MakeMove(move);
-                double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache, ordering);
+                game.UndoMove(undoToken);
+            }
+            double bestValue = double.MinValue;
+            foreach (var move in orderedMoves)
+            {
+                var undoToken = game.MakeMove(move);
+                double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
                 game.UndoMove(undoToken);
                 bestValue = Math.Max(bestValue, v);
                 alpha = Math.Max(alpha, v);
@@ -139,21 +140,21 @@ namespace GameAiLib
             return bestValue;
         }
 
-        private double EvalGame(IGame game, int maxDepth, ICache cache, Dictionary<string, double> ordering)
+        private double EvalGame(IGame game, int maxDepth, ICache cache)
         {
 #if NEGAMAX_SIMPLE
             return -Negamax(game, maxDepth, game.Color);
 #elif NEGAMAX_ALPHABETA_NO_CACHE
             return -NegamaxAlphaBeta(game, maxDepth, -maxScore, maxScore, game.Color);
 #else
-            return -NegamaxAlphaBetaWithTable(game, maxDepth, -maxScore, maxScore, game.Color, cache, ordering);
+            return -NegamaxAlphaBetaWithTable(game, maxDepth, -maxScore, maxScore, game.Color, cache);
 #endif
         }
 
         // evaluates the player that started the game
         protected abstract double NegamaxEval(IGame game); 
 
-        protected virtual IEnumerable<string> OrderedMoves(IGame game, Dictionary<string, double> ordering)
+        protected virtual IEnumerable<string> OrderedMoves(IGame game)
         {
             return game.AvailableMoves;
         }
@@ -173,23 +174,17 @@ namespace GameAiLib
                 double bestScore = double.MinValue;
                 var bestMoves = new List<string>();
                 var moves = new Dictionary<string, double>();
-                Dictionary<string, double> ordering = null;
                 bool done = false;
                 for (int depth = !iterative ? maxDepth : 0; depth <= maxDepth; depth++)
                 {
                     Console.WriteLine($"DEPTH: {depth}");
-                    if (!cacheByDepth.ContainsKey(depth))
-                    {
-                        cacheByDepth.Add(depth, cacheConstructor?.Invoke());
-                    }
-                    cache = cache ?? cacheConstructor?.Invoke();
                     var t = DateTime.Now;
-                    foreach (var move in OrderedMoves(game, ordering)) 
+                    foreach (var move in OrderedMoves(game)) 
                     {
                         if (!moves.ContainsKey(move))
                         {
                             var undoToken = game.MakeMove(move);
-                            double score = EvalGame(game, depth, cache, ordering);
+                            double score = EvalGame(game, depth, cache);
                             Console.WriteLine($"{move}: {score}");
                             moves.Add(move, score);
                             if (score > bestScore) { bestScore = score; bestMoves.Clear(); }
@@ -201,7 +196,6 @@ namespace GameAiLib
                     }
                     Console.WriteLine((DateTime.Now - t).TotalSeconds);
                     if (done) { break; }
-                    ordering = moves.ToDictionary(x => x.Key, x => x.Value);
                     moves = moves
                         .Where(x => x.Value == -maxScore) // no need to re-explore losing paths
                         .ToDictionary(x => x.Key, x => x.Value);

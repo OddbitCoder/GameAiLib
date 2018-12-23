@@ -34,8 +34,8 @@ namespace GameAiLib
             private const double MAX_SCORE
                 = 4242; // (6 * 7) * 100 + (6 * 7)
 
-            public NegamaxBrain(int maxDepth = int.MaxValue, Func<ICache> cacheProvider = null, IMoveCache moveCache = null) 
-                : base(maxDepth, cacheProvider, moveCache, iterative: true, maxScore: MAX_SCORE)
+            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) 
+                : base(maxDepth, cache, moveCache, iterative: true, maxScore: MAX_SCORE)
             {
             }
 
@@ -60,14 +60,9 @@ namespace GameAiLib
                 }
             }
 
-            protected override IEnumerable<string> OrderedMoves(IGame game, Dictionary<string, double> ordering)
+            protected override IEnumerable<string> OrderedMoves(IGame game)
             {
-                return ordering == null
-                    ? game.AvailableMoves
-                        .OrderBy(m => order[m.FirstCharAsInt()])
-                    : game.AvailableMoves
-                        .OrderByDescending(m => ordering[m])
-                        .ThenBy(m => order[m.FirstCharAsInt()]);
+                return game.AvailableMoves.OrderBy(m => order[m.FirstCharAsInt()]);
             }
 
             private ulong ComputeWinningPositionsForPairs(ulong position, ulong mask)
@@ -135,7 +130,7 @@ namespace GameAiLib
             private ulong ComputeWinningPositions(ulong position, ulong mask)
             {
                 // vertical
-                 ulong r = (position << 1) & (position << 2) & (position << 3);
+                ulong r = (position << 1) & (position << 2) & (position << 3);
 
                 // horizontal
                 ulong p = (position << 7) & (position << 2 * 7);
