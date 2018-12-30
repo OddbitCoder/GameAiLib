@@ -31,6 +31,8 @@ namespace GameAiLib
         {
             private const double MAX_SCORE
                 = 4242; // (6 * 7) * 100 + (6 * 7)
+            private int[] cols
+                = new[] { 3, 2, 4, 1, 5, 0, 6 };
 
             public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) 
                 : base(maxDepth, cache, moveCache, iterative: true, maxScore: MAX_SCORE)
@@ -56,6 +58,45 @@ namespace GameAiLib
                     if (game.Color) { score = -score; }
                     return score;
                 }
+            }
+
+            private string ComputeWinningMove(ulong position, ulong mask)
+            {
+                ulong winMask = ComputeWinningPositions(position, mask);
+                if ((winMask & 1) != 0) { return "0"; }
+                ulong winMoves = ((winMask >> 1) & (mask | topMask)) << 1;
+                if (winMoves != 0)
+                {
+                    for (int i = 0; i < 7; i++)
+                    {
+                        if ((winMoves & (sideMask << (7 * i))) != 0)
+                        {
+                            return i.ToString();
+                        }
+                    }
+                }
+                return null;
+            }
+
+            protected override IEnumerable<string> GetValidMovesOptimized(IGame _game)
+            {
+                var game = (Connect4)_game;
+                // check if win is possible
+                var winMove = ComputeWinningMove(game.position, game.mask);
+                if (winMove != null) { return new[] { winMove }; }
+                // check if block is needed
+                var blockMove = ComputeWinningMove(game.position ^ game.mask, game.mask);
+                if (blockMove != null) { return new[] { blockMove }; }
+                var list = new List<string>(7);
+                for (int i = 0; i < 7; i++)
+                {
+                    int col = cols[i];
+                    if (((1ul << 5 << (col * 7)) & game.mask) == 0)
+                    {
+                        list.Add(col.ToString());
+                    }
+                }
+                return list;
             }
 
             private ulong ComputeWinningPositionsForPairs(ulong position, ulong mask)
@@ -160,13 +201,14 @@ namespace GameAiLib
             }
         }
 
+        private const ulong topMask
+            = 0b1000000_1000000_1000000_1000000_1000000_1000000_1000000ul;
         private const ulong bottomMask
             = 0b0000001_0000001_0000001_0000001_0000001_0000001_0000001ul;
+        private const ulong sideMask
+            = 0b0000000_0000000_0000000_0000000_0000000_0000000_0111111ul;
         private const ulong boardMask
             = bottomMask * ((1ul << 6) - 1);
-
-        private int[] cols
-            = new[] { 3, 2, 4, 1, 5, 0, 6 };
 
         private ulong position;
         private ulong mask;
@@ -196,9 +238,8 @@ namespace GameAiLib
         public IEnumerable<string> GetValidMoves()
         {
             var list = new List<string>(7);
-            for (int i = 0; i < 7; i++)
+            for (int col = 0; col < 7; col++)
             {
-                int col = cols[i];
                 if (((1ul << 5 << (col * 7)) & mask) == 0)
                 {
                     list.Add(col.ToString());

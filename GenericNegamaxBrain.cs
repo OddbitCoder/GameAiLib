@@ -34,7 +34,7 @@ namespace GameAiLib
                 return score;
             }
             double bestValue = double.MinValue;
-            foreach (var move in game.GetValidMoves())
+            foreach (var move in GetValidMovesOptimized(game))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -Negamax(game, depth - 1, !color);
@@ -51,7 +51,7 @@ namespace GameAiLib
                 return (color ? 1 : -1) * NegamaxEval(game);
             }
             double bestValue = double.MinValue;
-            foreach (var move in game.GetValidMoves())
+            foreach (var move in GetValidMovesOptimized(game))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
@@ -103,7 +103,7 @@ namespace GameAiLib
             //    if α ≥ β
             //        break
             double bestValue = double.MinValue;
-            foreach (var move in game.GetValidMoves())
+            foreach (var move in GetValidMovesOptimized(game))
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
@@ -146,7 +146,13 @@ namespace GameAiLib
         }
 
         // evaluates the player that started the game
-        protected abstract double NegamaxEval(IGame game); 
+        protected abstract double NegamaxEval(IGame game);
+
+        // in derived classes, this can return valid moves sorted and sifted
+        protected virtual IEnumerable<string> GetValidMovesOptimized(IGame game)
+        {
+            return game.GetValidMoves();
+        }
 
         public string MakeMove(IGame game)
         {
@@ -168,7 +174,7 @@ namespace GameAiLib
                     double bestScore = double.MinValue;
                     Console.WriteLine($"DEPTH: {depth}");
                     var t = DateTime.Now;
-                    foreach (var move in game.GetValidMoves()) 
+                    foreach (var move in GetValidMovesOptimized(game)) 
                     {
                         if (!moves.ContainsKey(move))
                         {
