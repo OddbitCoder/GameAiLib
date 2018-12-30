@@ -34,7 +34,7 @@ namespace GameAiLib
                 return score;
             }
             double bestValue = double.MinValue;
-            foreach (var move in game.AvailableMoves)
+            foreach (var move in game.GetValidMoves())
             {
                 var undoToken = game.MakeMove(move);
                 var dirName = $"./{game.ToOneLineString()}";
@@ -58,7 +58,7 @@ namespace GameAiLib
             }
             double bestValue = double.MinValue;
             int c = 1;
-            foreach (var move in game.AvailableMoves.Take(2))
+            foreach (var move in game.GetValidMoves().Take(2))
             {
                 object undoToken = game.MakeMove(move);
                 var dirName = $"./{game.ToOneLineString()}";
@@ -80,7 +80,7 @@ namespace GameAiLib
         {
             if (d < 0) { return; }
             queries.Add(query);
-            foreach (var move in game.AvailableMoves)
+            foreach (var move in game.GetValidMoves())
             {
                 var token = game.MakeMove(move);
                 if (!game.IsTerminalState)

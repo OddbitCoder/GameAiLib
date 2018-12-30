@@ -165,6 +165,9 @@ namespace GameAiLib
         private const ulong boardMask
             = bottomMask * ((1ul << 6) - 1);
 
+        private int[] cols
+            = new[] { 3, 2, 4, 1, 5, 0, 6 };
+
         private ulong position;
         private ulong mask;
         private ulong movesCode;
@@ -189,25 +192,19 @@ namespace GameAiLib
         {
             get { return IsWinningState || IsFull; }
         }
-
-        private int[] cols
-            = new[] { 3, 2, 4, 1, 5, 0, 6 };
        
-        public IEnumerable<string> AvailableMoves
+        public IEnumerable<string> GetValidMoves()
         {
-            get
+            var list = new List<string>(7);
+            for (int i = 0; i < 7; i++)
             {
-                var list = new List<string>(7);
-                for (int i = 0; i < 7; i++)
+                int col = cols[i];
+                if (((1ul << 5 << (col * 7)) & mask) == 0)
                 {
-                    int col = cols[i];
-                    if (((1ul << 5 << (col * 7)) & mask) == 0)
-                    {
-                        list.Add(col.ToString());
-                    }
+                    list.Add(col.ToString());
                 }
-                return list;
             }
+            return list;
         }
 
         public object MakeMove(string move)

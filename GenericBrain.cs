@@ -30,7 +30,7 @@ namespace GameAiLib
             {
                 double bestScore = double.MinValue;
                 var bestMoves = new List<string>();
-                foreach (var move in game.AvailableMoves)
+                foreach (var move in game.GetValidMoves())
                 {
                     var undoToken = game.MakeMove(move);
                     double score = EvalGame(game);

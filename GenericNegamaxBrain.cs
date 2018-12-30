@@ -34,7 +34,7 @@ namespace GameAiLib
                 return score;
             }
             double bestValue = double.MinValue;
-            foreach (var move in game.AvailableMoves)
+            foreach (var move in game.GetValidMoves())
             {
                 var undoToken = game.MakeMove(move);
                 double v = -Negamax(game, depth - 1, !color);
@@ -51,7 +51,7 @@ namespace GameAiLib
                 return (color ? 1 : -1) * NegamaxEval(game);
             }
             double bestValue = double.MinValue;
-            foreach (var move in game.AvailableMoves)
+            foreach (var move in game.GetValidMoves())
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
@@ -103,7 +103,7 @@ namespace GameAiLib
             //    if α ≥ β
             //        break
             double bestValue = double.MinValue;
-            foreach (var move in game.AvailableMoves)
+            foreach (var move in game.GetValidMoves())
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
@@ -160,15 +160,15 @@ namespace GameAiLib
             }
             else
             {
-                double bestScore = double.MinValue;
                 var bestMoves = new List<string>();
                 var moves = new Dictionary<string, double>();
                 bool done = false;
                 for (int depth = !iterative ? maxDepth : 0; depth <= maxDepth; depth++)
                 {
+                    double bestScore = double.MinValue;
                     Console.WriteLine($"DEPTH: {depth}");
                     var t = DateTime.Now;
-                    foreach (var move in game.AvailableMoves) 
+                    foreach (var move in game.GetValidMoves()) 
                     {
                         if (!moves.ContainsKey(move))
                         {

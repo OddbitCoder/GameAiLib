@@ -43,23 +43,20 @@ namespace GameAiLib
             get { return winningState; }
         }
 
-        public IEnumerable<string> AvailableMoves
+        public IEnumerable<string> GetValidMoves()
         {
-            get
+            var moves = new string[9 - this.moves];
+            int offset = 0;
+            int i = 0;
+            foreach (var row in board)
             {
-                var moves = new string[9 - this.moves];
-                int offset = 0;
-                int i = 0;
-                foreach (var row in board)
+                for (int col = 0; col < 3; col++)
                 {
-                    for (int col = 0; col < 3; col++)
-                    {
-                        if (row[col] == 0) { moves[i++] = (offset + col).ToString(); }
-                    }
-                    offset += 3;
+                    if (row[col] == 0) { moves[i++] = (offset + col).ToString(); }
                 }
-                return moves;
+                offset += 3;
             }
+            return moves;
         }
 
         public object MakeMove(string move)
