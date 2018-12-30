@@ -82,10 +82,10 @@ namespace GameAiLib
             {
                 var game = (Connect4)_game;
                 // check if win is possible
-                var winMove = ComputeWinningMove(game.position, game.mask);
+                var winMove = ComputeWinningMove(game.position ^ game.mask, game.mask);
                 if (winMove != null) { return new[] { winMove }; }
                 // check if block is needed
-                var blockMove = ComputeWinningMove(game.position ^ game.mask, game.mask);
+                var blockMove = ComputeWinningMove(game.position , game.mask);
                 if (blockMove != null) { return new[] { blockMove }; }
                 var list = new List<string>(7);
                 for (int i = 0; i < 7; i++)
