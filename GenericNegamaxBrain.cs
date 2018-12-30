@@ -34,7 +34,7 @@ namespace GameAiLib
                 return score;
             }
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game))
+            foreach (var move in game.AvailableMoves)
             {
                 var undoToken = game.MakeMove(move);
                 double v = -Negamax(game, depth - 1, !color);
@@ -51,7 +51,7 @@ namespace GameAiLib
                 return (color ? 1 : -1) * NegamaxEval(game);
             }
             double bestValue = double.MinValue;
-            foreach (var move in OrderedMoves(game))
+            foreach (var move in game.AvailableMoves)
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBeta(game, depth - 1, -beta, -alpha, !color);
@@ -102,14 +102,8 @@ namespace GameAiLib
             //    α := max(α, v)
             //    if α ≥ β
             //        break
-            var orderedMoves = OrderedMoves(game).ToArray();
-            foreach (var move in orderedMoves)
-            {
-                var undoToken = game.MakeMove(move);
-                game.UndoMove(undoToken);
-            }
             double bestValue = double.MinValue;
-            foreach (var move in orderedMoves)
+            foreach (var move in game.AvailableMoves)
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
@@ -154,11 +148,6 @@ namespace GameAiLib
         // evaluates the player that started the game
         protected abstract double NegamaxEval(IGame game); 
 
-        protected virtual IEnumerable<string> OrderedMoves(IGame game)
-        {
-            return game.AvailableMoves;
-        }
-
         public string MakeMove(IGame game)
         {
             if (moveCache != null && moveCache.Lookup(game, out IMoveCacheItem item))
@@ -179,7 +168,7 @@ namespace GameAiLib
                 {
                     Console.WriteLine($"DEPTH: {depth}");
                     var t = DateTime.Now;
-                    foreach (var move in OrderedMoves(game)) 
+                    foreach (var move in game.AvailableMoves) 
                     {
                         if (!moves.ContainsKey(move))
                         {

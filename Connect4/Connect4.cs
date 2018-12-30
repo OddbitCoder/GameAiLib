@@ -29,8 +29,6 @@ namespace GameAiLib
 
         public class NegamaxBrain : GenericNegamaxBrain
         {
-            private int[] order
-                = new[] { 5, 3, 1, 0, 2, 4, 6 };
             private const double MAX_SCORE
                 = 4242; // (6 * 7) * 100 + (6 * 7)
 
@@ -49,20 +47,15 @@ namespace GameAiLib
                 }
                 else
                 {
-                    ulong otherPosition = game.position ^ game.mask;
-                    int scoreP1 = CountOnes(ComputeWinningPositions(game.position, game.mask));
-                    int scoreP2 = CountOnes(ComputeWinningPositions(otherPosition, game.mask));
-                    int scorePairsP1 = CountOnes(ComputeWinningPositionsForPairs(game.position, game.mask));
-                    int scorePairsP2 = CountOnes(ComputeWinningPositionsForPairs(otherPosition, game.mask));
-                    int score = (scoreP1 * 100 + scorePairsP1) - (scoreP2 * 100 + scorePairsP2);
+                    ulong positionOther = game.position ^ game.mask;
+                    int scoreCurrent = CountOnes(ComputeWinningPositions(game.position, game.mask));
+                    int scoreOther = CountOnes(ComputeWinningPositions(positionOther, game.mask));
+                    int scorePairsCurrent = CountOnes(ComputeWinningPositionsForPairs(game.position, game.mask));
+                    int scorePairsOther = CountOnes(ComputeWinningPositionsForPairs(positionOther, game.mask));
+                    int score = (scoreCurrent * 100 + scorePairsCurrent) - (scoreOther * 100 + scorePairsOther);
                     if (game.Color) { score = -score; }
                     return score;
                 }
-            }
-
-            protected override IEnumerable<string> OrderedMoves(IGame game)
-            {
-                return game.AvailableMoves.OrderBy(m => order[m.FirstCharAsInt()]);
             }
 
             private ulong ComputeWinningPositionsForPairs(ulong position, ulong mask)
@@ -197,13 +190,17 @@ namespace GameAiLib
             get { return IsWinningState || IsFull; }
         }
 
+        private int[] cols
+            = new[] { 3, 2, 4, 1, 5, 0, 6 };
+       
         public IEnumerable<string> AvailableMoves
         {
             get
             {
                 var list = new List<string>(7);
-                for (int col = 0; col < 7; col++)
+                for (int i = 0; i < 7; i++)
                 {
+                    int col = cols[i];
                     if (((1ul << 5 << (col * 7)) & mask) == 0)
                     {
                         list.Add(col.ToString());
