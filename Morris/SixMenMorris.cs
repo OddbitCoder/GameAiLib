@@ -154,7 +154,7 @@ namespace GameAiLib
                 ushort rmvPieceMask = (ushort)(otherPlayerMask & ~millMask);
                 if (rmvPieceMask == 0) { rmvPieceMask = otherPlayerMask; }
                 ushort x = (ushort)(Rotr(playerMask) & Rotl(playerMask) & ~boardMask);
-                ushort cwMillMoveMask = (ushort)(x & Rotr(Rotr(playerMask)) & diagMask);
+                ushort cwMillMoveMask = (ushort)(x & Rotr2(playerMask) & diagMask);
                 // moves that form a mill
                 // clockwise
                 if (cwMillMoveMask != 0)
@@ -174,7 +174,7 @@ namespace GameAiLib
                     }
                 }
                 // counter-clockwise
-                ushort ccwMillMoveMask = (ushort)(x & Rotl(Rotl(playerMask)) & diagMask);
+                ushort ccwMillMoveMask = (ushort)(x & Rotl2(playerMask) & diagMask);
                 if (ccwMillMoveMask != 0)
                 {
                     for (int i = 0; i < 16; i++)
