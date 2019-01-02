@@ -64,45 +64,33 @@ namespace GameAiLib
         public bool Color { get; private set; } // color of the player that is about to make a move
             = true; // true = white, player that started the game
 
-        private ushort Shr(ushort pos)
+        private ushort Rotr(ushort pos)
         {
-            ushort bit1 = (ushort)(pos & 1);
-            pos >>= 1;
-            //pos &= 0b01111111_11111111; // unnecessary
-            pos |= (ushort)((pos & 0b00000000_10000000) << 8);
-            pos &= 0b11111111_01111111;
-            pos |= (ushort)(bit1 << 7);
-            return pos;
+            return (ushort)(((pos & 0b11111110_11111111) >> 1) | ((pos & 0b00000001_00000001) << 7));
         }
 
-        private ushort Shl(ushort pos)
+        private ushort Rotl(ushort pos)
         {
-            ushort bit15 = (ushort)(pos & 0b10000000_00000000);
-            pos <<= 1;
-            //pos &= 0b11111111_11111110; // unnecessary
-            pos |= (ushort)((pos & 0b00000001_00000000) >> 8);
-            pos &= 0b11111110_11111111;
-            pos |= (ushort)(bit15 >> 7);
-            return pos;
+            return (ushort)(((pos & 0b11111111_01111111) << 1) | ((pos & 0b10000000_10000000) >> 7));
         }
 
         private ushort GetMillPos(ushort pos, ushort mask)
         {
             // center piece missing
-            ushort p = (ushort)(Shr((ushort)(pos & Shl(Shl(pos)))) & ~diagMask);
-            // right piece (clockwise) missing
-            ushort r = (ushort)(Shl((ushort)(pos & Shl(pos))) & diagMask);
+            ushort p = (ushort)(Rotr((ushort)(pos & Rotl(Rotl(pos)))) & ~diagMask);
+            // clockwise piece missing
+            ushort r = (ushort)(Rotl((ushort)(pos & Rotl(pos))) & diagMask);
             p |= r;
-            // left piece (counter-clockwise) missing
-            r = (ushort)(Shr((ushort)(pos & Shr(pos))) & diagMask);
+            // counter-clockwise piece missing
+            r = (ushort)(Rotr((ushort)(pos & Rotr(pos))) & diagMask);
             p |= r;
             return (ushort)(p & ~mask);
         }
 
         private ushort GetMillsMask(ushort pos)
         {
-            ushort p = (ushort)(pos & Shl(pos) & Shr(pos) & ~diagMask);
-            return (ushort)(p | Shr(p) | Shl(p));
+            ushort p = (ushort)(pos & Rotl(pos) & Rotr(pos) & ~diagMask);
+            return (ushort)(p | Rotr(p) | Rotl(p));
         }
 
         public IEnumerable<string> GetValidMoves()
@@ -119,10 +107,12 @@ namespace GameAiLib
                     ushort rmvMask = (ushort)(posOther & ~millsMask);
                     if (rmvMask == 0) { rmvMask = posOther; }
                     // moves that form a mill and remove one opponent's piece
+                    // TODO: moves that occupy corners first?
                     for (int i = 0; i < 16; i++)
                     {
                         if ((millPos & (1 << i)) != 0)
                         {
+                            // TODO: rmv pieces that occupy corners first?
                             for (int j = 0; j < 16; j++)
                             {
                                 if ((rmvMask & (1 << j)) != 0)
@@ -134,6 +124,7 @@ namespace GameAiLib
                     }
                 }
                 // other moves
+                // TODO: moves that occupy corners first?
                 ushort otherMoves = (ushort)(~mask & ~millPos);
                 for (int i = 0; i < 16; i++)
                 {
@@ -145,9 +136,9 @@ namespace GameAiLib
             }
             else // PHASE 2
             {
-                ushort x = (ushort)(Shr(pos) & Shl(pos) & ~mask);
-                ushort cwMillPos = (ushort)(x & Shr(Shr(pos)) & diagMask);
-                ushort ccwMillPos = (ushort)(x & Shl(Shl(pos)) & diagMask);
+                ushort x = (ushort)(Rotr(pos) & Rotl(pos) & ~mask);
+                ushort cwMillPos = (ushort)(x & Rotr(Rotr(pos)) & diagMask);
+                ushort ccwMillPos = (ushort)(x & Rotl(Rotl(pos)) & diagMask);
                 ushort inMillPos = (ushort)(x & (pos >> 8) & ~diagMask);
                 ushort outMillPos = (ushort)(x & (pos << 8) & ~diagMask);
                 ushort rmvMask = 0;
@@ -223,7 +214,8 @@ namespace GameAiLib
                 }
                 // other moves
                 // clockwise
-                ushort cwSlidePos = (ushort)(Shl(pos) & ~mask & ~cwMillPos);
+                // TODO: moves that occupy corner first?
+                ushort cwSlidePos = (ushort)(Rotl(pos) & ~mask & ~cwMillPos);
                 if (cwSlidePos != 0)
                 {
                     for (int i = 0; i < 16; i++)
@@ -235,7 +227,8 @@ namespace GameAiLib
                     }
                 }
                 // counter-clockwise
-                ushort ccwSlidePos = (ushort)(Shr(pos) & ~mask & ~ccwMillPos);
+                // TODO: moves that occupy corner first?
+                ushort ccwSlidePos = (ushort)(Rotr(pos) & ~mask & ~ccwMillPos);
                 if (ccwSlidePos != 0)
                 {
                     for (int i = 0; i < 16; i++)
