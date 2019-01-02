@@ -48,8 +48,8 @@ namespace GameAiLib
             public ushort boardMask;
         }
 
-        private ushort playerMask; // positions of the player that made the last move
-        private ushort boardMask; // playerMask ^ boardMask: positions of the player that is about to make a move
+        private ushort playerMask; // mask for the player that made the last move
+        private ushort boardMask; // playerMask ^ boardMask: mask for the player that is about to make a move
         private int moves; // number of moves (game depth)
 
         private const ushort diagMask
@@ -187,7 +187,7 @@ namespace GameAiLib
                 ushort inMillMoveMask = (ushort)(x & (playerMask >> 8) & ~diagMask);
                 if (inMillMoveMask != 0)
                 {
-                    for (int i = 0; i < 8; i++)
+                    for (int i = 1; i < 8; i += 2)
                     {
                         if ((inMillMoveMask & (1 << i)) != 0)
                         {
@@ -204,7 +204,7 @@ namespace GameAiLib
                 ushort outMillMoveMask = (ushort)(x & (playerMask << 8) & ~diagMask);
                 if (outMillMoveMask != 0)
                 {
-                    for (int i = 8; i < 16; i++)
+                    for (int i = 9; i < 16; i += 2)
                     {
                         if ((outMillMoveMask & (1 << i)) != 0)
                         {
@@ -249,7 +249,7 @@ namespace GameAiLib
                 ushort inSlideMoveMask = (ushort)((playerMask >> 8) & ~boardMask & ~inMillMoveMask & ~diagMask);
                 if (inSlideMoveMask != 0)
                 {
-                    for (int i = 0; i < 8; i++)
+                    for (int i = 1; i < 8; i += 2)
                     {
                         if ((inSlideMoveMask & (1 << i)) != 0)
                         {
@@ -261,7 +261,7 @@ namespace GameAiLib
                 ushort outSlideMoveMask = (ushort)((playerMask << 8) & ~boardMask & ~outMillMoveMask & ~diagMask);
                 if (outSlideMoveMask != 0)
                 {
-                    for (int i = 8; i < 16; i++)
+                    for (int i = 9; i < 16; i += 2)
                     {
                         if ((outSlideMoveMask & (1 << i)) != 0)
                         {
