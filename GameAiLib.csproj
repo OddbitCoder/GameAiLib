@@ -67,6 +67,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GenericBrain.cs" />
+    <Compile Include="Morris\SixMenMorris.cs" />
     <Compile Include="Obsolete\GenericBrainOld.cs" />
     <Compile Include="GenericNegamaxBrain.cs" />
     <Compile Include="IBrain.cs" />

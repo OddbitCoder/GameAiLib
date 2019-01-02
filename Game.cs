@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace GameAiLib
 {
@@ -104,7 +105,21 @@ namespace GameAiLib
                     break;
                 }
             }
-        } 
+        }
+
+        public static void Play(IGame game)
+        {
+            while (true)
+            {
+                Console.WriteLine("Board:");
+                Console.WriteLine(game.ToString());
+                Console.Write("Valid moves: ");
+                Console.WriteLine(game.GetValidMoves().Aggregate((a, b) => a + ", " + b));
+                Console.Write("Your move: ");
+                var move = Console.ReadLine();
+                game.MakeMove(move);
+            }
+        }
 
         public static void Play(IGameOld game, IBrainOld brain, bool humanStarts = false)
         {

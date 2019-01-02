@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace GameAiLib
@@ -34,8 +33,8 @@ namespace GameAiLib
             private int[] cols
                 = new[] { 3, 2, 4, 1, 5, 0, 6 };
 
-            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null) 
-                : base(maxDepth, cache, moveCache, iterative: true, maxScore: MAX_SCORE)
+            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null, bool iterative = true) 
+                : base(maxDepth, cache, moveCache, iterative, maxScore: MAX_SCORE)
             {
             }
 
@@ -85,7 +84,7 @@ namespace GameAiLib
                 var winMove = ComputeWinningMove(game.position ^ game.mask, game.mask);
                 if (winMove != null) { return new[] { winMove }; }
                 // check if block is needed
-                var blockMove = ComputeWinningMove(game.position , game.mask);
+                var blockMove = ComputeWinningMove(game.position, game.mask);
                 if (blockMove != null) { return new[] { blockMove }; }
                 var list = new List<string>(7);
                 for (int i = 0; i < 7; i++)
@@ -210,8 +209,8 @@ namespace GameAiLib
         private const ulong boardMask
             = bottomMask * ((1ul << 6) - 1);
 
-        private ulong position;
-        private ulong mask;
+        private ulong position; // position of the player that made the last move
+        private ulong mask;     // position ^ mask: position of the player that is about to make a move
         private ulong movesCode;
         private int moves;
 
