@@ -44,12 +44,12 @@ namespace GameAiLib
     {
         public struct UndoToken
         {
-            public ushort position;
-            public ushort mask;
+            public ushort playerMask;
+            public ushort boardMask;
         }
 
-        private ushort position; // position of the player that made the last move
-        private ushort mask; // position ^ mask: position of the player that is about to make a move
+        private ushort playerMask; // positions of the player that made the last move
+        private ushort boardMask; // playerMask ^ boardMask: positions of the player that is about to make a move
         private int moves; // number of moves (game depth)
 
         private const ushort diagMask
@@ -64,68 +64,68 @@ namespace GameAiLib
         public bool Color { get; private set; } // color of the player that is about to make a move
             = true; // true = white, player that started the game
 
-        private ushort Rotr(ushort pos)
+        private ushort Rotr(ushort val)
         {
-            return (ushort)(((pos & 0b11111110_11111111) >> 1) | ((pos & 0b00000001_00000001) << 7));
+            return (ushort)(((val & 0b11111110_11111111) >> 1) | ((val & 0b00000001_00000001) << 7));
         }
 
-        private ushort Rotl(ushort pos)
+        private ushort Rotl(ushort val)
         {
-            return (ushort)(((pos & 0b11111111_01111111) << 1) | ((pos & 0b10000000_10000000) >> 7));
+            return (ushort)(((val & 0b11111111_01111111) << 1) | ((val & 0b10000000_10000000) >> 7));
         }
 
-        private ushort Rotr2(ushort pos)
+        private ushort Rotr2(ushort val)
         {
-            return (ushort)(((pos & 0b11111100_11111111) >> 2) | ((pos & 0b00000011_00000011) << 6));
+            return (ushort)(((val & 0b11111100_11111111) >> 2) | ((val & 0b00000011_00000011) << 6));
         }
 
-        private ushort Rotl2(ushort pos)
+        private ushort Rotl2(ushort val)
         {
-            return (ushort)(((pos & 0b11111111_00111111) << 2) | ((pos & 0b11000000_11000000) >> 6));
+            return (ushort)(((val & 0b11111111_00111111) << 2) | ((val & 0b11000000_11000000) >> 6));
         }
 
-        private ushort GetMillPos(ushort pos, ushort mask)
+        private ushort GetMillMoveMask(ushort playerMask, ushort boardMask)
         {
             // center piece missing
-            ushort p = (ushort)(Rotl(pos) & Rotr(pos) & ~diagMask);
+            ushort p = (ushort)(Rotl(playerMask) & Rotr(playerMask) & ~diagMask);
             // clockwise piece missing
-            ushort r = (ushort)(Rotl(pos) & Rotl2(pos) & diagMask);
+            ushort r = (ushort)(Rotl(playerMask) & Rotl2(playerMask) & diagMask);
             p |= r;
             // counter-clockwise piece missing
-            r = (ushort)(Rotr(pos) & Rotr2(pos) & diagMask); 
+            r = (ushort)(Rotr(playerMask) & Rotr2(playerMask) & diagMask); 
             p |= r;
-            return (ushort)(p & ~mask);
+            return (ushort)(p & ~boardMask);
         }
 
-        private ushort GetMillsMask(ushort pos)
+        private ushort GetMillMask(ushort playerMask)
         {
-            ushort p = (ushort)(pos & Rotl(pos) & Rotr(pos) & ~diagMask);
+            ushort p = (ushort)(playerMask & Rotl(playerMask) & Rotr(playerMask) & ~diagMask);
             return (ushort)(p | Rotr(p) | Rotl(p));
         }
 
         public IEnumerable<string> GetValidMoves()
         {
-            ushort pos = (ushort)(position ^ mask);
-            ushort posOther = position;
+            ushort playerMask = (ushort)(this.playerMask ^ boardMask);
+            ushort otherPlayerMask = this.playerMask;
             var validMoves = new List<string>(32);
             if (moves < 12) // PHASE 1
             {
-                ushort millPos = GetMillPos(pos, mask);
-                if (millPos != 0)
+                ushort millMoveMask = GetMillMoveMask(playerMask, boardMask);
+                if (millMoveMask != 0)
                 {
-                    ushort millsMask = GetMillsMask(posOther);
-                    ushort rmvMask = (ushort)(posOther & ~millsMask);
-                    if (rmvMask == 0) { rmvMask = posOther; }
+                    ushort millMask = GetMillMask(otherPlayerMask);
+                    ushort rmvPieceMask = (ushort)(otherPlayerMask & ~millMask);
+                    if (rmvPieceMask == 0) { rmvPieceMask = otherPlayerMask; }
                     // moves that form a mill and remove one opponent's piece
                     // TODO: moves that occupy corners first?
                     for (int i = 0; i < 16; i++)
                     {
-                        if ((millPos & (1 << i)) != 0)
+                        if ((millMoveMask & (1 << i)) != 0)
                         {
                             // TODO: rmv pieces that occupy corners first?
                             for (int j = 0; j < 16; j++)
                             {
-                                if ((rmvMask & (1 << j)) != 0)
+                                if ((rmvPieceMask & (1 << j)) != 0)
                                 {
                                     validMoves.Add(i.MoveStr() + j.MoveStr());
                                 }
@@ -135,10 +135,10 @@ namespace GameAiLib
                 }
                 // other moves
                 // TODO: moves that occupy corners first?
-                ushort otherMoves = (ushort)(~mask & ~millPos);
+                ushort otherMoveMask = (ushort)(~boardMask & ~millMoveMask);
                 for (int i = 0; i < 16; i++)
                 {
-                    if ((otherMoves & (1 << i)) != 0)
+                    if ((otherMoveMask & (1 << i)) != 0)
                     {
                         validMoves.Add(i.MoveStr());
                     }
@@ -146,27 +146,20 @@ namespace GameAiLib
             }
             else // PHASE 2
             {
-                ushort x = (ushort)(Rotr(pos) & Rotl(pos) & ~mask);
-                ushort cwMillPos = (ushort)(x & Rotr(Rotr(pos)) & diagMask);
-                ushort ccwMillPos = (ushort)(x & Rotl(Rotl(pos)) & diagMask);
-                ushort inMillPos = (ushort)(x & (pos >> 8) & ~diagMask);
-                ushort outMillPos = (ushort)(x & (pos << 8) & ~diagMask);
-                ushort rmvMask = 0;
-                if ((ccwMillPos | cwMillPos | inMillPos | outMillPos) != 0)
-                {
-                    ushort millsMask = GetMillsMask(posOther);
-                    rmvMask = (ushort)(posOther & ~millsMask);
-                    if (rmvMask == 0) { rmvMask = posOther; }
-                }
-                if (cwMillPos != 0)
+                ushort millMask = GetMillMask(otherPlayerMask);
+                ushort rmvPieceMask = (ushort)(otherPlayerMask & ~millMask);
+                if (rmvPieceMask == 0) { rmvPieceMask = otherPlayerMask; }
+                ushort x = (ushort)(Rotr(playerMask) & Rotl(playerMask) & ~boardMask);
+                ushort cwMillMoveMask = (ushort)(x & Rotr(Rotr(playerMask)) & diagMask);
+                if (cwMillMoveMask != 0)
                 {
                     for (int i = 0; i < 16; i++)
                     {
-                        if ((cwMillPos & (1 << i)) != 0)
+                        if ((cwMillMoveMask & (1 << i)) != 0)
                         {
                             for (int j = 0; j < 16; j++)
                             {
-                                if ((rmvMask & (1 << j)) != 0)
+                                if ((rmvPieceMask & (1 << j)) != 0)
                                 {
                                     validMoves.Add(i.PrevMove().MoveStr() + i.MoveStr() + j.MoveStr());
                                 }
@@ -174,15 +167,16 @@ namespace GameAiLib
                         }
                     }
                 }
-                if (ccwMillPos != 0)
+                ushort ccwMillMoveMask = (ushort)(x & Rotl(Rotl(playerMask)) & diagMask);
+                if (ccwMillMoveMask != 0)
                 {
                     for (int i = 0; i < 16; i++)
                     {
-                        if ((ccwMillPos & (1 << i)) != 0)
+                        if ((ccwMillMoveMask & (1 << i)) != 0)
                         {
                             for (int j = 0; j < 16; j++)
                             {
-                                if ((rmvMask & (1 << j)) != 0)
+                                if ((rmvPieceMask & (1 << j)) != 0)
                                 {
                                     validMoves.Add(i.NextMove().MoveStr() + i.MoveStr() + j.MoveStr());
                                 }
@@ -190,15 +184,16 @@ namespace GameAiLib
                         }
                     }
                 }
-                if (inMillPos != 0)
+                ushort inMillMoveMask = (ushort)(x & (playerMask >> 8) & ~diagMask);
+                if (inMillMoveMask != 0)
                 {
                     for (int i = 0; i < 8; i++)
                     {
-                        if ((inMillPos & (1 << i)) != 0)
+                        if ((inMillMoveMask & (1 << i)) != 0)
                         {
                             for (int j = 0; j < 16; j++)
                             {
-                                if ((rmvMask & (1 << j)) != 0)
+                                if ((rmvPieceMask & (1 << j)) != 0)
                                 {
                                     validMoves.Add((i + 8).MoveStr() + i.MoveStr() + j.MoveStr());
                                 }
@@ -206,15 +201,16 @@ namespace GameAiLib
                         }
                     }
                 }
-                if (outMillPos != 0)
+                ushort outMillMoveMask = (ushort)(x & (playerMask << 8) & ~diagMask);
+                if (outMillMoveMask != 0)
                 {
                     for (int i = 8; i < 16; i++)
                     {
-                        if ((outMillPos & (1 << i)) != 0)
+                        if ((outMillMoveMask & (1 << i)) != 0)
                         {
                             for (int j = 0; j < 16; j++)
                             {
-                                if ((rmvMask & (1 << j)) != 0)
+                                if ((rmvPieceMask & (1 << j)) != 0)
                                 {
                                     validMoves.Add((i - 8).MoveStr() + i.MoveStr() + j.MoveStr());
                                 }
@@ -225,12 +221,12 @@ namespace GameAiLib
                 // other moves
                 // clockwise
                 // TODO: moves that occupy corner first?
-                ushort cwSlidePos = (ushort)(Rotl(pos) & ~mask & ~cwMillPos);
-                if (cwSlidePos != 0)
+                ushort cwSlideMoveMask = (ushort)(Rotl(playerMask) & ~boardMask & ~cwMillMoveMask);
+                if (cwSlideMoveMask != 0)
                 {
                     for (int i = 0; i < 16; i++)
                     {
-                        if ((cwSlidePos & (1 << i)) != 0)
+                        if ((cwSlideMoveMask & (1 << i)) != 0)
                         {
                             validMoves.Add(i.PrevMove().MoveStr() + i.MoveStr());
                         }
@@ -238,36 +234,36 @@ namespace GameAiLib
                 }
                 // counter-clockwise
                 // TODO: moves that occupy corner first?
-                ushort ccwSlidePos = (ushort)(Rotr(pos) & ~mask & ~ccwMillPos);
-                if (ccwSlidePos != 0)
+                ushort ccwSlideMoveMask = (ushort)(Rotr(playerMask) & ~boardMask & ~ccwMillMoveMask);
+                if (ccwSlideMoveMask != 0)
                 {
                     for (int i = 0; i < 16; i++)
                     {
-                        if ((ccwSlidePos & (1 << i)) != 0)
+                        if ((ccwSlideMoveMask & (1 << i)) != 0)
                         {
                             validMoves.Add(i.NextMove().MoveStr() + i.MoveStr());
                         }
                     }
                 }
                 // inwards
-                ushort inSlidePos = (ushort)((pos >> 8) & ~mask & ~inMillPos & ~diagMask);
-                if (inSlidePos != 0)
+                ushort inSlideMoveMask = (ushort)((playerMask >> 8) & ~boardMask & ~inMillMoveMask & ~diagMask);
+                if (inSlideMoveMask != 0)
                 {
                     for (int i = 0; i < 8; i++)
                     {
-                        if ((inSlidePos & (1 << i)) != 0)
+                        if ((inSlideMoveMask & (1 << i)) != 0)
                         {
                             validMoves.Add((i + 8).MoveStr() + i.MoveStr());
                         }
                     }
                 }
                 // outwards
-                ushort outSlidePos = (ushort)((pos << 8) & ~mask & ~outMillPos & ~diagMask);
-                if (outSlidePos != 0)
+                ushort outSlideMoveMask = (ushort)((playerMask << 8) & ~boardMask & ~outMillMoveMask & ~diagMask);
+                if (outSlideMoveMask != 0)
                 {
                     for (int i = 8; i < 16; i++)
                     {
-                        if ((outSlidePos & (1 << i)) != 0)
+                        if ((outSlideMoveMask & (1 << i)) != 0)
                         {
                             validMoves.Add((i - 8).MoveStr() + i.MoveStr());
                         }
@@ -280,14 +276,14 @@ namespace GameAiLib
         public object MakeMove(string move)
         {
             var undoToken = new UndoToken {
-                mask = mask,
-                position = position
+                boardMask = boardMask,
+                playerMask = playerMask
             };
-            mask |= (ushort)(1 << (move.MoveIdx(0)));
-            position ^= mask;
+            boardMask |= (ushort)(1 << (move.MoveIdx(0)));
+            playerMask ^= boardMask;
             if (move.Length > 1) 
             {
-                mask &= (ushort)~(1 << (move.MoveIdx(1))); // remove opponent's piece
+                boardMask &= (ushort)~(1 << (move.MoveIdx(1))); // remove opponent's piece
             }
             Color = !Color;
             moves++;
@@ -298,8 +294,8 @@ namespace GameAiLib
         public void UndoMove(object _undoToken)
         {
             var undoToken = (UndoToken)_undoToken;
-            mask = undoToken.mask;
-            position = undoToken.position;
+            boardMask = undoToken.boardMask;
+            playerMask = undoToken.playerMask;
             Color = !Color;
             moves--;
             IsWinningState = false;
@@ -320,14 +316,14 @@ namespace GameAiLib
             char piece = !Color ? 'w' : 'x';
             for (int i = 0; i < 16; i++)
             {
-                if ((position & (1 << i)) != 0)
+                if ((playerMask & (1 << i)) != 0)
                 {
                     board = board.Replace((char)(i + 'a'), piece);
                 }
             }
             // player that is about to make a move (his color is 'Color', his position is 'position ^ mask')
             piece = Color ? 'w' : 'x';
-            ushort posOther = (ushort)(position ^ mask);
+            ushort posOther = (ushort)(playerMask ^ boardMask);
             for (int i = 0; i < 16; i++)
             {
                 if ((posOther & (1 << i)) != 0)
@@ -338,7 +334,7 @@ namespace GameAiLib
             // empty places
             for (int i = 0; i < 16; i++)
             {
-                if ((mask & (1 << i)) == 0)
+                if ((boardMask & (1 << i)) == 0)
                 {
                     board = board.Replace((char)(i + 'a'), ' ');
                 }
