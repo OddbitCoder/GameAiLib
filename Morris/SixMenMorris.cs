@@ -74,15 +74,25 @@ namespace GameAiLib
             return (ushort)(((pos & 0b11111111_01111111) << 1) | ((pos & 0b10000000_10000000) >> 7));
         }
 
+        private ushort Rotr2(ushort pos)
+        {
+            return (ushort)(((pos & 0b11111100_11111111) >> 2) | ((pos & 0b00000011_00000011) << 6));
+        }
+
+        private ushort Rotl2(ushort pos)
+        {
+            return (ushort)(((pos & 0b11111111_00111111) << 2) | ((pos & 0b11000000_11000000) >> 6));
+        }
+
         private ushort GetMillPos(ushort pos, ushort mask)
         {
             // center piece missing
-            ushort p = (ushort)(Rotr((ushort)(pos & Rotl(Rotl(pos)))) & ~diagMask);
+            ushort p = (ushort)(Rotl(pos) & Rotr(pos) & ~diagMask);
             // clockwise piece missing
-            ushort r = (ushort)(Rotl((ushort)(pos & Rotl(pos))) & diagMask);
+            ushort r = (ushort)(Rotl(pos) & Rotl2(pos) & diagMask);
             p |= r;
             // counter-clockwise piece missing
-            r = (ushort)(Rotr((ushort)(pos & Rotr(pos))) & diagMask);
+            r = (ushort)(Rotr(pos) & Rotr2(pos) & diagMask); 
             p |= r;
             return (ushort)(p & ~mask);
         }
