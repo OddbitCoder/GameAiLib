@@ -26,7 +26,7 @@ namespace GameAiLib
             // 8 -> 15; 0 -> 7
             move--;
             if (move == 7) { move = 15; }
-            if (move == -1) { move = 7; }
+            else if (move == -1) { move = 7; }
             return move;
         }
 
@@ -35,7 +35,7 @@ namespace GameAiLib
             // 15 -> 8; 7 -> 0
             move++;
             if (move == 16) { move = 8; }
-            if (move == 8) { move = 0; }
+            else if (move == 8) { move = 0; }
             return move;
         }
     }
