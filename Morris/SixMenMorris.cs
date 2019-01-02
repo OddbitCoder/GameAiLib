@@ -23,20 +23,24 @@ namespace GameAiLib
 
         public static int PrevMove(this int move)
         {
-            // 8 -> 15; 0 -> 7
             move--;
-            if (move == 7) { move = 15; }
-            else if (move == -1) { move = 7; }
-            return move;
+            switch (move) // 8 -> 15; 0 -> 7
+            {
+                case 7: return 15;
+                case -1: return 7;
+                default: return move;
+            }
         }
 
         public static int NextMove(this int move)
         {
-            // 15 -> 8; 7 -> 0
             move++;
-            if (move == 16) { move = 8; }
-            else if (move == 8) { move = 0; }
-            return move;
+            switch (move) // 15 -> 8; 7 -> 0
+            {
+                case 16: return 9;
+                case 8: return 0;
+                default: return move;
+            }
         }
     }
 
@@ -151,6 +155,8 @@ namespace GameAiLib
                 if (rmvPieceMask == 0) { rmvPieceMask = otherPlayerMask; }
                 ushort x = (ushort)(Rotr(playerMask) & Rotl(playerMask) & ~boardMask);
                 ushort cwMillMoveMask = (ushort)(x & Rotr(Rotr(playerMask)) & diagMask);
+                // moves that form a mill
+                // clockwise
                 if (cwMillMoveMask != 0)
                 {
                     for (int i = 0; i < 16; i++)
@@ -167,6 +173,7 @@ namespace GameAiLib
                         }
                     }
                 }
+                // counter-clockwise
                 ushort ccwMillMoveMask = (ushort)(x & Rotl(Rotl(playerMask)) & diagMask);
                 if (ccwMillMoveMask != 0)
                 {
@@ -184,6 +191,7 @@ namespace GameAiLib
                         }
                     }
                 }
+                // inwards
                 ushort inMillMoveMask = (ushort)(x & (playerMask >> 8) & ~diagMask);
                 if (inMillMoveMask != 0)
                 {
@@ -201,6 +209,7 @@ namespace GameAiLib
                         }
                     }
                 }
+                // outwards
                 ushort outMillMoveMask = (ushort)(x & (playerMask << 8) & ~diagMask);
                 if (outMillMoveMask != 0)
                 {
