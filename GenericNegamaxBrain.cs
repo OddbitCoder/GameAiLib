@@ -102,8 +102,14 @@ namespace GameAiLib
             //    α := max(α, v)
             //    if α ≥ β
             //        break
+            var validMoves = GetValidMovesOptimized(game);
+            if (validMoves?.Any() != true)
+            {
+                // no moves possible => opponent wins
+                return maxScore; // TODO: what kind of sign here???
+            }
             double bestValue = double.MinValue;
-            foreach (var move in GetValidMovesOptimized(game))
+            foreach (var move in validMoves)
             {
                 var undoToken = game.MakeMove(move);
                 double v = -NegamaxAlphaBetaWithTable(game, depth - 1, -beta, -alpha, !color, cache);
