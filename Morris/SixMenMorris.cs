@@ -26,9 +26,12 @@ namespace GameAiLib
             move--;
             switch (move) // 8 -> 15; 0 -> 7
             {
-                case 7: return 15;
-                case -1: return 7;
-                default: return move;
+                case 7:
+                    return 15;
+                case -1:
+                    return 7;
+                default:
+                    return move;
             }
         }
 
@@ -37,9 +40,12 @@ namespace GameAiLib
             move++;
             switch (move) // 15 -> 8; 7 -> 0
             {
-                case 16: return 9;
-                case 8: return 0;
-                default: return move;
+                case 16:
+                    return 8;
+                case 8:
+                    return 0;
+                default:
+                    return move;
             }
         }
     }
@@ -54,13 +60,13 @@ namespace GameAiLib
 
         private ushort playerMask; // mask for the player that made the last move
         private ushort boardMask; // playerMask ^ boardMask: mask for the player that is about to make a move
-        private int moves; // number of moves (game depth)
+        private int moves; // number of moves (depth)
 
         private const ushort diagMask
             = 0b01010101_01010101;
 
-        public bool IsTerminalState 
-            => moves == 12;
+        public bool IsTerminalState
+            => IsWinningState;
 
         public bool IsWinningState { get; private set; }
             = false;
@@ -282,21 +288,44 @@ namespace GameAiLib
             return validMoves;
         }
 
+        private int CountOnes(ulong m)
+        {
+            int c = 0;
+            for (c = 0; m != 0; c++) { m &= m - 1; }
+            return c;
+        }
+
         public object MakeMove(string move)
         {
             var undoToken = new UndoToken {
                 boardMask = boardMask,
                 playerMask = playerMask
             };
-            boardMask |= (ushort)(1 << (move.MoveIdx(0)));
-            playerMask ^= boardMask;
-            if (move.Length > 1) 
+            if (moves < 12) // PHASE 1
             {
-                boardMask &= (ushort)~(1 << (move.MoveIdx(1))); // remove opponent's piece
+                boardMask |= (ushort)(1 << (move.MoveIdx(0)));
+                playerMask ^= boardMask;
+                if (move.Length > 1)
+                {
+                    // remove opponent's piece
+                    boardMask &= (ushort)~(1 << (move.MoveIdx(1))); 
+                }
+            }
+            else // PHASE 2
+            {
+                boardMask &= (ushort)~(1 << (move.MoveIdx(0)));
+                boardMask |= (ushort)(1 << (move.MoveIdx(1)));
+                playerMask ^= boardMask;
+                if (move.Length > 2)
+                {
+                    // remove opponent's piece
+                    boardMask &= (ushort)~(1 << (move.MoveIdx(2)));
+                    // check if down to 2 pieces
+                    IsWinningState = CountOnes((ushort)(playerMask ^ boardMask)) <= 2;
+                }
             }
             Color = !Color;
             moves++;
-            // TODO: check if win
             return undoToken;
         }
 
