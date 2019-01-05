@@ -71,7 +71,8 @@ namespace GameAiLib
             {
                 if (!skipPlayer1)
                 {
-                    brain.MakeMove(game);
+                    var move = brain.MakeMove(game);
+                    Console.WriteLine($"My move: {move}");
                     Console.WriteLine(game);
                     if (game.IsWinningState)
                     {
@@ -89,6 +90,7 @@ namespace GameAiLib
                     skipPlayer1 = false;
                     Console.WriteLine(game);
                 }
+                Console.WriteLine($"Available moves: {game.GetValidMoves().Aggregate((a, b) => a + ", " + b)}");
                 Console.Write("Your move? ");
                 var playerMove = Console.ReadLine(); // TODO: repeat this if the move is not valid
                 game.MakeMove(playerMove);

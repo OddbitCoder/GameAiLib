@@ -3,50 +3,12 @@ using System.Collections.Generic;
 
 namespace GameAiLib
 {
-    public static class SixMenMorrisExtensions
+    public static class SixMenMorrisExtensions // for debugging only
     {
         public static string AsString(this ushort val)
         {
             var str = Convert.ToString(val, 2).PadLeft(16, '0');
             return str.Substring(0, 8) + "\n" + str.Substring(8);
-        }
-
-        public static int MoveIdx(this string move, int idx)
-        {
-            return move[idx] - 'A';
-        }
-
-        public static string MoveStr(this int move)
-        {
-            return ((char)(move + 'A')).ToString();
-        }
-
-        public static int PrevMove(this int move)
-        {
-            move--;
-            switch (move) // 8 -> 15; 0 -> 7
-            {
-                case 7:
-                    return 15;
-                case -1:
-                    return 7;
-                default:
-                    return move;
-            }
-        }
-
-        public static int NextMove(this int move)
-        {
-            move++;
-            switch (move) // 15 -> 8; 7 -> 0
-            {
-                case 16:
-                    return 8;
-                case 8:
-                    return 0;
-                default:
-                    return move;
-            }
         }
     }
 
@@ -61,7 +23,7 @@ namespace GameAiLib
         public class NegamaxBrain : GenericNegamaxBrain
         {
             private const double MAX_SCORE
-                = 6 + 1;
+                = 10000;
 
             public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null, bool iterative = true)
                 : base(maxDepth, cache, moveCache, iterative, maxScore: MAX_SCORE)
@@ -79,13 +41,23 @@ namespace GameAiLib
                 {
                     // TEMPLATE:
                     //ushort otherPlayerMask = (ushort)(game.playerMask ^ game.boardMask);
-                    //int scorePlayer = 0; // compute from game.playerMask
-                    //int scoreOpponent = 0; // compute from otherPlayerMask 
+                    //int scorePlayer = f(game.playerMask);
+                    //int scoreOpponent = f(otherPlayerMask);
                     //int score = scorePlayer - scoreOpponent;
                     //return game.Color ? -score : score;
                     ushort otherPlayerMask = (ushort)(game.playerMask ^ game.boardMask);
-                    int scorePlayer = NumberOfPieces(game.playerMask); 
-                    int scoreOpponent = NumberOfPieces(otherPlayerMask); 
+                    int scorePlayer = EvalFunction(
+                        0, 
+                        NumberOfMorrises(game.playerMask), 
+                        NumberOfBlockedPieces(game.playerMask, otherPlayerMask), 
+                        NumberOfPieces(game.playerMask)
+                    ); 
+                    int scoreOpponent = EvalFunction(
+                        0,
+                        NumberOfMorrises(otherPlayerMask),
+                        NumberOfBlockedPieces(otherPlayerMask, game.playerMask),
+                        NumberOfPieces(otherPlayerMask)
+                    );
                     int score = scorePlayer - scoreOpponent;
                     return game.Color ? -score : score;
                 }
@@ -93,7 +65,8 @@ namespace GameAiLib
 
             private int NumberOfMorrises(ushort playerMask)
             {
-                return 0;
+                ushort p = (ushort)(playerMask & Rotl(playerMask) & Rotr(playerMask) & ~diagMask);
+                return Utils.CountOnes(p);
             }
 
             private int NumberOfBlockedPieces(ushort playerMask, ushort otherPlayerMask)
@@ -103,7 +76,16 @@ namespace GameAiLib
 
             private int NumberOfPieces(ushort playerMask)
             {
-                return 0;
+                return Utils.CountOnes(playerMask);
+            }
+
+            private int EvalFunction(int closedMorris, int numberOfMorrises, int numberOfBlockedPieces, int numberOfPieces)
+            {
+                // https://kartikkukreja.wordpress.com/2014/03/17/heuristicevaluation-function-for-nine-mens-morris/
+                // Evaluation function for Phase 1 = 18 * (1) + 26 * (2) + 1 * (3) + 9 * (4) + 10 * (5) + 7 * (6)
+                // Evaluation function for Phase 2 = 14 * (1) + 43 * (2) + 10 * (3) + 11 * (4) + 8 * (7) + 1086 * (8)
+                // Evaluation function for Phase 3 = 16 * (1) + 10 * (5) + 1 * (6) + 1190 * (8)
+                return 18 * closedMorris + 26 * numberOfMorrises + 1 * numberOfBlockedPieces + 9 * numberOfPieces;
             }
         }
 
@@ -123,27 +105,55 @@ namespace GameAiLib
         public bool Color { get; private set; } // color of the player that is about to make a move
             = true; // true = white, player that started the game
 
-        private ushort Rotr(ushort val)
+        private static ushort Rotr(ushort val)
         {
             return (ushort)(((val & 0b11111110_11111111) >> 1) | ((val & 0b00000001_00000001) << 7));
         }
 
-        private ushort Rotl(ushort val)
+        private static ushort Rotl(ushort val)
         {
             return (ushort)(((val & 0b11111111_01111111) << 1) | ((val & 0b10000000_10000000) >> 7));
         }
 
-        private ushort Rotr2(ushort val)
+        private static ushort Rotr2(ushort val)
         {
             return (ushort)(((val & 0b11111100_11111111) >> 2) | ((val & 0b00000011_00000011) << 6));
         }
 
-        private ushort Rotl2(ushort val)
+        private static ushort Rotl2(ushort val)
         {
             return (ushort)(((val & 0b11111111_00111111) << 2) | ((val & 0b11000000_11000000) >> 6));
         }
 
-        private ushort GetMillMoveMask(ushort playerMask, ushort boardMask)
+        private static int PrevMove(int move)
+        {
+            move--;
+            switch (move) // 8 -> 15; 0 -> 7
+            {
+                case 7:
+                    return 15;
+                case -1:
+                    return 7;
+                default:
+                    return move;
+            }
+        }
+
+        private static int NextMove(int move)
+        {
+            move++;
+            switch (move) // 15 -> 8; 7 -> 0
+            {
+                case 16:
+                    return 8;
+                case 8:
+                    return 0;
+                default:
+                    return move;
+            }
+        }
+
+        private static ushort GetMillMoveMask(ushort playerMask, ushort boardMask)
         {
             // center piece missing
             ushort p = (ushort)(Rotl(playerMask) & Rotr(playerMask) & ~diagMask);
@@ -156,7 +166,7 @@ namespace GameAiLib
             return (ushort)(p & ~boardMask);
         }
 
-        private ushort GetMillMask(ushort playerMask)
+        private static ushort GetMillMask(ushort playerMask)
         {
             ushort p = (ushort)(playerMask & Rotl(playerMask) & Rotr(playerMask) & ~diagMask);
             return (ushort)(p | Rotr(p) | Rotl(p));
@@ -222,7 +232,7 @@ namespace GameAiLib
                             {
                                 if ((rmvPieceMask & (1 << j)) != 0)
                                 {
-                                    validMoves.Add(i.PrevMove().MoveStr() + i.MoveStr() + j.MoveStr());
+                                    validMoves.Add(PrevMove(i).MoveStr() + i.MoveStr() + j.MoveStr());
                                 }
                             }
                         }
@@ -240,7 +250,7 @@ namespace GameAiLib
                             {
                                 if ((rmvPieceMask & (1 << j)) != 0)
                                 {
-                                    validMoves.Add(i.NextMove().MoveStr() + i.MoveStr() + j.MoveStr());
+                                    validMoves.Add(NextMove(i).MoveStr() + i.MoveStr() + j.MoveStr());
                                 }
                             }
                         }
@@ -292,7 +302,7 @@ namespace GameAiLib
                     {
                         if ((cwSlideMoveMask & (1 << i)) != 0)
                         {
-                            validMoves.Add(i.PrevMove().MoveStr() + i.MoveStr());
+                            validMoves.Add(PrevMove(i).MoveStr() + i.MoveStr());
                         }
                     }
                 }
@@ -305,7 +315,7 @@ namespace GameAiLib
                     {
                         if ((ccwSlideMoveMask & (1 << i)) != 0)
                         {
-                            validMoves.Add(i.NextMove().MoveStr() + i.MoveStr());
+                            validMoves.Add(NextMove(i).MoveStr() + i.MoveStr());
                         }
                     }
                 }
@@ -337,13 +347,6 @@ namespace GameAiLib
             return validMoves;
         }
 
-        private int CountOnes(ulong m)
-        {
-            int c = 0;
-            for (c = 0; m != 0; c++) { m &= m - 1; }
-            return c;
-        }
-
         public object MakeMove(string move)
         {
             var undoToken = new UndoToken {
@@ -370,7 +373,7 @@ namespace GameAiLib
                     // remove opponent's piece
                     boardMask &= (ushort)~(1 << (move.MoveIdx(2)));
                     // check if down to 2 pieces
-                    IsWinningState = CountOnes((ushort)(playerMask ^ boardMask)) <= 2;
+                    IsWinningState = Utils.CountOnes((ushort)(playerMask ^ boardMask)) <= 2;
                 }
             }
             Color = !Color;
