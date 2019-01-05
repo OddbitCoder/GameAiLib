@@ -141,7 +141,7 @@ namespace GameAiLib
 
 
 
-            var cache = new Connect4Cache();
+            var cache = new GenericCache<ulong>();
             var moveCache = new Connect4MoveCache(@"C:\Work\GameAiLib\data\starting.ojpl");
             //bool player1Starts = true;
             //int p1w = 0, p2w = 0, t = 0;
@@ -171,7 +171,7 @@ namespace GameAiLib
 
             //Game.PlayNew(new Connect4(), new Connect4.NegamaxBrain(15, new Connect4Cache(), null, iterative: false), skipPlayer1: true);
             //Game.Play(new SixMenMorris());
-            Game.PlayNew(new SixMenMorris(), new SixMenMorris.NegamaxBrain(12, null, null, iterative: false), skipPlayer1: true);
+            Game.PlayNew(new SixMenMorris(), new SixMenMorris.NegamaxBrain(12, new GenericCache<uint>(), null, iterative: false), skipPlayer1: true);
 
 
 

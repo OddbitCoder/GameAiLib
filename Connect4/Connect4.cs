@@ -17,7 +17,7 @@ namespace GameAiLib
         }
     }
 
-    public class Connect4 : IGame
+    public class Connect4 : IGame, ICacheable<ulong>
     {
         public struct UndoToken
         {
@@ -233,7 +233,15 @@ namespace GameAiLib
         {
             get { return IsWinningState || IsFull; }
         }
-       
+
+        public ulong BoardCode
+        {
+            get
+            {
+                return position + mask;
+            }
+        }
+
         public IEnumerable<string> GetValidMoves()
         {
             var list = new List<string>(7);
@@ -285,11 +293,6 @@ namespace GameAiLib
             IsWinningState = false;
             moves--;
             Color = !Color;
-        }
-
-        public ulong NodeCode()
-        {
-            return position + mask; 
         }
 
         public ulong MovesCode()

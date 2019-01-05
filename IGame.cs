@@ -2,6 +2,11 @@
 
 namespace GameAiLib
 {
+    public interface ICacheable<T>
+    {
+        T BoardCode { get; }
+    }
+
     public interface IGame
     {
         bool IsTerminalState { get; }

@@ -61,8 +61,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GenericCache.cs" />
     <Compile Include="Connect4\Connect4MoveCache.cs" />
-    <Compile Include="Connect4\Connect4Cache.cs" />
     <Compile Include="Connect4\Connect4.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Game.cs" />

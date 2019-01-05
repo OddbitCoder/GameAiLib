@@ -12,7 +12,7 @@ namespace GameAiLib
         }
     }
 
-    public class SixMenMorris : IGame
+    public class SixMenMorris : IGame, ICacheable<uint>
     {
         public struct UndoToken
         {
@@ -46,17 +46,19 @@ namespace GameAiLib
                     //int score = scorePlayer - scoreOpponent;
                     //return game.Color ? -score : score;
                     ushort otherPlayerMask = (ushort)(game.playerMask ^ game.boardMask);
-                    int scorePlayer = EvalFunction(
+                    int scorePlayer = WeightedScore(
                         0, 
                         NumberOfMorrises(game.playerMask), 
                         NumberOfBlockedPieces(game.playerMask, otherPlayerMask), 
-                        NumberOfPieces(game.playerMask)
+                        NumberOfPieces(game.playerMask),
+                        NumberOfTwoPieceConfigs(game.playerMask, otherPlayerMask)
                     ); 
-                    int scoreOpponent = EvalFunction(
+                    int scoreOpponent = WeightedScore(
                         0,
                         NumberOfMorrises(otherPlayerMask),
                         NumberOfBlockedPieces(otherPlayerMask, game.playerMask),
-                        NumberOfPieces(otherPlayerMask)
+                        NumberOfPieces(otherPlayerMask),
+                        NumberOfTwoPieceConfigs(otherPlayerMask, game.playerMask)
                     );
                     int score = scorePlayer - scoreOpponent;
                     return game.Color ? -score : score;
@@ -65,8 +67,7 @@ namespace GameAiLib
 
             private int NumberOfMorrises(ushort playerMask)
             {
-                ushort p = (ushort)(playerMask & Rotl(playerMask) & Rotr(playerMask) & ~diagMask);
-                return Utils.CountOnes(p);
+                return Utils.CountOnes((ushort)(playerMask & Rotl(playerMask) & Rotr(playerMask) & ~diagMask));
             }
 
             private int NumberOfBlockedPieces(ushort playerMask, ushort otherPlayerMask)
@@ -79,13 +80,23 @@ namespace GameAiLib
                 return Utils.CountOnes(playerMask);
             }
 
-            private int EvalFunction(int closedMorris, int numberOfMorrises, int numberOfBlockedPieces, int numberOfPieces)
+            private int NumberOfTwoPieceConfigs(ushort playerMask, ushort otherPlayerMask)
+            {
+                return Utils.CountOnes(GetMillMoveMask(playerMask, (ushort)(playerMask | otherPlayerMask)));
+            }
+
+            private int WeightedScore(int closedMorris, int numberOfMorrises, int numberOfBlockedPieces, int numberOfPieces, int numberOfTwoPieceConfigs)
             {
                 // https://kartikkukreja.wordpress.com/2014/03/17/heuristicevaluation-function-for-nine-mens-morris/
                 // Evaluation function for Phase 1 = 18 * (1) + 26 * (2) + 1 * (3) + 9 * (4) + 10 * (5) + 7 * (6)
                 // Evaluation function for Phase 2 = 14 * (1) + 43 * (2) + 10 * (3) + 11 * (4) + 8 * (7) + 1086 * (8)
                 // Evaluation function for Phase 3 = 16 * (1) + 10 * (5) + 1 * (6) + 1190 * (8)
-                return 18 * closedMorris + 26 * numberOfMorrises + 1 * numberOfBlockedPieces + 9 * numberOfPieces;
+                return 
+                    18 * closedMorris + 
+                    26 * numberOfMorrises + 
+                    1 * numberOfBlockedPieces + 
+                    9 * numberOfPieces + 
+                    10 * numberOfTwoPieceConfigs;
             }
         }
 
@@ -104,6 +115,14 @@ namespace GameAiLib
 
         public bool Color { get; private set; } // color of the player that is about to make a move
             = true; // true = white, player that started the game
+
+        public uint BoardCode
+        {
+            get
+            {
+                return playerMask | ((uint)boardMask << 16);
+            }
+        }
 
         private static ushort Rotr(ushort val)
         {
