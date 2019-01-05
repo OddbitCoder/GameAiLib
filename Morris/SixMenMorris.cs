@@ -58,6 +58,55 @@ namespace GameAiLib
             public ushort boardMask;
         }
 
+        public class NegamaxBrain : GenericNegamaxBrain
+        {
+            private const double MAX_SCORE
+                = 6 + 1;
+
+            public NegamaxBrain(int maxDepth = int.MaxValue, ICache cache = null, IMoveCache moveCache = null, bool iterative = true)
+                : base(maxDepth, cache, moveCache, iterative, maxScore: MAX_SCORE)
+            {
+            }
+
+            protected override double NegamaxEval(IGame _game)
+            {
+                var game = (SixMenMorris)_game;
+                if (game.IsWinningState)
+                {
+                    return (game.Color ? -1 : 1) * MAX_SCORE;
+                }
+                else
+                {
+                    // TEMPLATE:
+                    //ushort otherPlayerMask = (ushort)(game.playerMask ^ game.boardMask);
+                    //int scorePlayer = 0; // compute from game.playerMask
+                    //int scoreOpponent = 0; // compute from otherPlayerMask 
+                    //int score = scorePlayer - scoreOpponent;
+                    //return game.Color ? -score : score;
+                    ushort otherPlayerMask = (ushort)(game.playerMask ^ game.boardMask);
+                    int scorePlayer = NumberOfPieces(game.playerMask); 
+                    int scoreOpponent = NumberOfPieces(otherPlayerMask); 
+                    int score = scorePlayer - scoreOpponent;
+                    return game.Color ? -score : score;
+                }
+            }
+
+            private int NumberOfMorrises(ushort playerMask)
+            {
+                return 0;
+            }
+
+            private int NumberOfBlockedPieces(ushort playerMask, ushort otherPlayerMask)
+            {
+                return 0;
+            }
+
+            private int NumberOfPieces(ushort playerMask)
+            {
+                return 0;
+            }
+        }
+
         private ushort playerMask; // mask for the player that made the last move
         private ushort boardMask; // playerMask ^ boardMask: mask for the player that is about to make a move
         private int moves; // number of moves (depth)
