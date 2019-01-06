@@ -171,7 +171,7 @@ namespace GameAiLib
 
             //Game.PlayNew(new Connect4(), new Connect4.NegamaxBrain(15, new Connect4Cache(), null, iterative: false), skipPlayer1: true);
             //Game.Play(new SixMenMorris());
-            Game.PlayNew(new SixMenMorris(), new SixMenMorris.NegamaxBrain(12, new GenericCache<uint>(), null, iterative: false), skipPlayer1: true);
+            Game.PlayNew(new SixMenMorris(), new SixMenMorris.NegamaxBrain(12, new GenericCache<ulong>(), null, iterative: false), skipPlayer1: true);
 
 
 

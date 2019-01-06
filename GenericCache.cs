@@ -29,11 +29,12 @@ namespace GameAiLib
 
         public bool Lookup(IGame game, out ICacheItem item)
         {
-            NumLookups++;
             T boardCode = ((ICacheable<T>)game).BoardCode;
             ulong key = Convert.ToUInt64(boardCode) % (ulong)items.Length;
             item = items[key];
             bool hit = items[key].boardCode.Equals(boardCode);
+#if DEBUG
+            NumLookups++;
             if (hit)
             {
                 CacheHits++;
@@ -42,6 +43,7 @@ namespace GameAiLib
                     ExactHits++;
                 }
             }
+#endif
             return hit;
         }
 

@@ -12,7 +12,7 @@ namespace GameAiLib
         }
     }
 
-    public class SixMenMorris : IGame, ICacheable<uint>
+    public class SixMenMorris : IGame, ICacheable<ulong>
     {
         public struct UndoToken
         {
@@ -85,7 +85,13 @@ namespace GameAiLib
                 return Utils.CountOnes(GetMillMoveMask(playerMask, (ushort)(playerMask | otherPlayerMask)));
             }
 
-            private int WeightedScore(int closedMorris, int numberOfMorrises, int numberOfBlockedPieces, int numberOfPieces, int numberOfTwoPieceConfigs)
+            private int WeightedScore(
+                int closedMorris, 
+                int numberOfMorrises, 
+                int numberOfBlockedPieces, 
+                int numberOfPieces, 
+                int numberOfTwoPieceConfigs
+            )
             {
                 // https://kartikkukreja.wordpress.com/2014/03/17/heuristicevaluation-function-for-nine-mens-morris/
                 // Evaluation function for Phase 1 = 18 * (1) + 26 * (2) + 1 * (3) + 9 * (4) + 10 * (5) + 7 * (6)
@@ -114,13 +120,13 @@ namespace GameAiLib
             = false;
 
         public bool Color { get; private set; } // color of the player that is about to make a move
-            = true; // true = white, player that started the game
+            = true; // true = white = player that started the game
 
-        public uint BoardCode
+        public ulong BoardCode
         {
             get
             {
-                return playerMask | ((uint)boardMask << 16);
+                return playerMask | ((ulong)boardMask << 16) | ((ulong)moves << 32);
             }
         }
 
